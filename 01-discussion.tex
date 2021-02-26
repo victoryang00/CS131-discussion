@@ -51,7 +51,6 @@
 
 \begin{document}
 \maketitle
-\tableofcontents
 \section{Welcome to the Compiler's World}
 \subsection{Some General Views}
 
@@ -67,12 +66,32 @@ Till now, we have made the program into a Intermediate Representations, which in
 The eventual process of a compiler is Code Generator to generate machine code, we'll cover transform the IR into the riscv backend that we've covered on Computer Architechture classes. Wish you a good luck at Compiler class.
 
 \subsection{Why Both Parser and Lexer?}
+Only lexer in dealing with the C++ code do not deal with nested grammer. The well defined C++ code is even not acceptable by the modern parser.
 
-Julia is language with no Lexer and some of the parser , it generates 
+In the old compiler, We don't recognize vector<vector<> >. For example vector<vector<int> > v, some compiler will compile into vector < vector < int >> v. Other than that, we have Most vexing parse.
 
+\begin{figure}[H]
+    \begin{lstlisting}[language={[ANSI]C},
+            numbers=left,
+            numberstyle=\extratiny,
+            basicstyle=\small]
+struct Timer {};
+struct TimeKeeper {
+  explicit TimeKeeper(Timer t);
+  int get_time();
+};
+int main() {
+  TimeKeeper time_keeper(Timer());
+  return time_keeper.get_time();
+}
+    \end{lstlisting}
+\end{figure}
 
-Single Parser or Single Lexer is not sounded to compiled a well defined language. 
+TimeKeeper time\_keeper(Timer()); is ambiguous, since it could be interpreted either as a variable definition for variable time\_keeper of class TimeKeeper, initialized with an anonymous instance of class Timer or a function declaration for a function time\_keeper that returns an object of type TimeKeeper and has a single (unnamed) parameter, whose type is a (pointer to a) function[Note 1] taking no input and returning Timer objects.
 
+Julia is language with no Lexer and with parser, its parser reads from the string stream to generate the AST. It makes a lot of Context-Sensitive keyword and grammer struct which is difficult to formally describe, functional language's manual is shorter than languages like C++. But we can see that only parser is actually possible to parse the code. The lexer to decide the token is for sake of speed. But Lex/Yacc is fast enough to take over the speed. In Julia, operator and token are the same. import Base.* means import operator* from class Base, also means import all subclasses in class Base.
+
+Thus mere lexer and mere parser are not wise.
 \subsection{How can a simple regex work in your project?}
 \begin{enumerate}
 
@@ -86,8 +105,8 @@ Compilers are conceptually broken down into multiple phases, each of which carry
 \begin{figure}[H]
     \begin{lstlisting}[language={[ANSI]C},
             numbers=left,
-            numberstyle=\extratiny\menlo,
-            basicstyle=\small\menlo]
+            numberstyle=\extratiny,
+            basicstyle=\small]
 // n! = 1 * 2 * 3 * .... * (n-1) * n
 int factorial(int n) {
     int result = 1;
@@ -97,6 +116,8 @@ int factorial(int n) {
     }
     \end{lstlisting}
 \end{figure}
+
+
 \textbf{Answer:}
 $
 \\
@@ -147,14 +168,7 @@ $
 \\
 $
 \subsubsection{ShanghaiTech Teacher's email addreess}
-    {xxxx@shanghaitech.edu.cn}, different error handler for different inputs?
-\\
-\textbf{Answer:}
-$
-\\
-\\
-$
-Suppose you have a large spreadsheet, each row of which has afirstname,lastname,andemailcolumn.  You want to find all people who use an email address of the formfirstname+lastname@shanghaitech.edu.cb.   Write  a  regular  expression  using  backreferences that describes this pattern.
+    {xxxx@shanghaitech.edu.cn}, different error handler for different inputs? Suppose you have a large spreadsheet, each row of which has a firstname,lastname,and email column.  You want to find all people who use an email address of the form firstname+lastname@shanghaitech.edu.cn.   Write  a  regular  expression  using  backreferences that describes this pattern.
 \\
 \textbf{Answer:}
 $
