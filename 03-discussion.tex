@@ -53,88 +53,172 @@
 
 \begin{document}
 \maketitle
-\section{DFA and NFA}
-\subsection{Introduction}
 
-Finite state automata (FSA) are abstract machines that feature states and guarded tran-sitions from one state to another.  An FSA can only be in one state a time, and its totalnumber of states isfinite.  The machine takes transitions in response to inputs it receivessequentially;  if an input matches the guard of a transition that departs from the currentstate that transition is said to beenabled; only enabled transitions can be taken.  FSA thathave an accepting state provide the machinery to determine whether an input string is in aregular language.  If no transitions are enabled by a given input then the entire input stringgets  rejected.   If  all  inputs  are  processed  and  the  FSA  is  in  an  accepting  state  then  theentire input string is accepted.  Deterministic finite state automata (DFA) can only haveone enabled transition at a time while a non-deterministic finite state automata (NFA) canhave multiple.
+\section{Derivations in Top-down parsing}
 
+If a string belongs to a particular language, we can find aparse treefor it.  A single nonterminal  roots  the  parse  tree  (e.g  ‘prog’  or  ‘expr’).   This  top-level  nonterminal branches off into constituent nonterminals, eventually breaking down into terminals and symbols at the leaves.Top-down parsingis a method of matching strings via an abstract preorder traversal of a parse tree.  We’ve already seen an example of this: recursive descent!  As a recap from lecture:
+\begin {enumerate}
+\item \textbf{Leftmost derivation:}  a  sequence  of  rules  following  a  preorder  traversal  of  the parse tree.
+\item \textbf{Rightmost derivation:} see previous definition, but with a right-to-left preorder traversal.
+\end{enumerate}
+
+The reverse rightmost derivation is the rightmost derivation in reverse.  The reverse rightmost derivation is an instance of bottom-up parsing—the string’s lowest level de-tails are recognized first, then mid-level details, finally leading up to the start symbol.
+
+\section{Lambda Expression}
+
+\subsection{Start with halting problems}
+
+You must have heard of "object-oriented": encapsulation, inheritance, polymorphism, all in all it seems to be very powerful. Functionality sounds like a real weakness.
+\\
+Functional programming is a completely different programming paradigm, as opposed to "imperative programming". It is characterized by: invariants, inertia, high order functions, no side effects, everything is a function.
+
+Have you ever thought of a tool that automatically checks for dead loops in your program? Whether you have ever thought about it or not, I have anyway, but unfortunately the answer is, no!
+
+\textbf{Halting problem:} Given any program and its input, determine whether the program can end within a finite number of calculations. Assuming that this algorithm is actually made, you can just give it any function and the input to this function, and it will tell you whether the function will run to the end or not.
+We describe this in the following pseudo-code:
+
+
+\begin{figure}[H]
+    \begin{lstlisting}[language={[ANSI]C},
+            numbers=left,
+            numberstyle=\extratiny,
+            basicstyle=\small]
+function halting(func, input) {
+    return if_func_will_halt_on_input;
+}
+    \end{lstlisting}
+\end{figure}
+
+and another pseudo-code:
+\begin{figure}[H]
+    \begin{lstlisting}[language={[ANSI]C},
+            numbers=left,
+            numberstyle=\extratiny,
+            basicstyle=\small]
+function ni_ma(func) {
+    if (halting(func, func)) {
+        for(;;) //dead loop }
+}
+    \end{lstlisting}
+\end{figure}
+
+When we call \textbf { ni\_ma(ni\_ma) }. We can't deduce whether it is halting or not halting. Thus halting problem is not deciable.
+
+
+Here comes the \textbf{lambda calculus}, Consider the following \textbf{lambda calculus} grammar:
 \subsection{What language is accepted by the following DFA?}
-\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto]
-    \node[state,initial,accepting] (q_0)   {$q_0$};
-    \node[state] (q_1) [above right=of q_0] {$q_1$};
-    \node[state] (q_2) [right=of q_1] {$q_2$};
-    \node[state] (q_3) [below right=of q_2] {$q_3$};
-    \path[->]
-    (q_0) edge  node {0,1} (q_1)
-    (q_1) edge  node  {0,1} (q_2)
-    (q_2) edge  node  {0,1} (q_3)
-    (q_3)edge  node  [above]{0,1} (q_0);
+\begin{verbatim}
+var  : ID ;
+expr : var
+     . ‘(’ ‘l’ var ‘.’ expr ‘)’
+     | ‘(’ expr expr ‘)’ ;
+\end{verbatim}
 
-\end{tikzpicture}
-\\
-\textbf{Answer:}
+Use this grammar to construct leftmost and reverse rightmost derivations of the following strings.
+$$
+(\lambda f .(\lambda x .(f(f x))))
+$$
+Of the three syntaxes defined earlier, the first two are used to generate "functions" and the third is used for function "calls", e.g.: $ ((\lambda xy.x+y)23) $. For simplicity: $\text {let add= }\lambda{ xy.x+y}$ then $\text{(add 2 3)}$\\
 
-\subsection{What language is accepted by the following NFA?}
-\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto]
-    \node[state,initial] (q_0)   {$q_0$};
-    \node[state] (q_1) [ right=of q_0] {$q_1$};
-    \node[state,accepting] (q_2) [right=of q_1] {$q_2$};
-    \node[state,accepting] (q_3) [ right=of q_2] {$q_3$};
-    \path[->]
-    (q_0) edge [loop above] node {0,1} ()
-        edge  node  [above]{1} (q_1)
-    (q_1) edge  node  {0} (q_2)
-    (q_2) edge  node  {1} (q_3);
+Here's the two axiom of \textbf{lambda calculus}:
+\begin{enumerate}
+\item \textbf{Permutation axiom:} $\lambda xy.x+y=> \lambda ab.a+b$
+\item \textbf{Substitute axiom:} $(\lambda xy.x+y)ab=>a+b$
+\end{enumerate}
 
-\end{tikzpicture}
-\\
-\textbf{Answer:}
+\subsection{Function Generator}
 
-\subsection{What language is accepted by the following NFA?}
-\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto]
-    \node[state,initial,accepting] (q_0)   {$q_0$};
-    \node[state] (q_3) [ right=of q_2] {$q_3$};
-    \node[state,accepting] (q_2) [right=of q_1] {$q_2$};
-    \node[state,accepting] (q_1) [ right=of q_0] {$q_1$};
-    \node[state,accepting] (q_4) [ right=of q_3] {$q_4$};
-    \node[state,accepting] (q_5) [ right=of q_4] {$q_5$};
-    \path[->]
-    (q_0) 
-        edge  node  [above]{0,1} (q_1)
-    (q_1) edge  node  {0,1} (q_2)
-    (q_2) edge  node  {0,1} (q_3)
-    (q_3) edge  node  {0,1} (q_4)
-    (q_4) edge  node  {0,1} (q_5)
-    (q_5) edge [loop above] node {0,1} ();
-\end{tikzpicture}
-\\
+The $\lambda$ algorithm is equivalent to a function generator
+\begin{enumerate}
+    \item let mul= $\lambda$ xy.x*y, we have: mul 3 5 -> 3 * 5
+    \item let con= $\lambda$ xy.xy, we have: con ‘yangyw’ ‘ISvegetable’ -> ‘yangywISvegetable’
+    \item let not = false -> true . true -> false
+    \item let ext-and = true value -> value . false value -> false . value true -> value . value false -> false
+    \item let if = $\lambda$ cond tvalue fvalue . (cond and tvalue) or (not cond and fvalue)
+    \item let fact =$\lambda$ n . if (n==0) 1 (n * fact n-1)
+\end{enumerate}
+We noticed that the sixth take the function itself as the input for the function. It's not in accordance to the math axiom loop definition and can be parsed by compilers. It will parameterize itself as $self$:
+$$\text{let P = } \lambda\text{ self n . if (n==0) 1 (n * self(self n-1))$$
+$$let fact n = P (P n)}$$
+
+
+Unfortunately this isn't really recursive, it's just an extra argument passed in each time and called repeatedly. So what is our purpose? I want a truly recursive function that is
+
 \textbf{Answer:}
 
 
-\subsection{Construct the NFA that accepts}
-\subsubsection{$x(zy?|(yz)*)$}
-\textbf{Answer:}
-\subsubsection{$(10)*1*01*0$}
-\textbf{Answer:}
+\subsection{Fixed Point ${P(fact) = fact}$}
+What is a fixed point? It is a point (in the generalized sense) that is mapped by a function, and the result obtained is still the point. Imagine a map of China on the wall falls on the floor, there must be and only one point on the map with its actual position.
+\subsection{Magical Y}
+So let's go ahead and assume that there is a magic function Y that finds the immovable point of this pseudo-recursive function, namely:
 
-\subsection{Minimized the NFA}
-  \begin{enumerate}
-	\item Original NFA, $\Sigma = \{a, b, c\}$:
-	\\
-	\begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto]
-		\node[state,initial] (q_0)   {$q_0$};
-		\node[state] (q_1) [above right=of q_0] {$q_1$};
-		\node[state] (q_2) [below right=of q_0] {$q_2$};
-		\node[state,accepting](q_3) [below right=of q_1] {$q_3$};
-		\path[->]
-		(q_0) edge [loop below] node {a,b,c} ()
-			  edge  node  [above] {a} (q_3)
-			  edge  node  {b} (q_1)
-			  edge  node  {c} (q_2)
-		(q_1) edge  node  {c} (q_3)
-		(q_2) edge  node  {b} (q_3)
-			  edge  [loop below] node  {b} ();
-	\end{tikzpicture}
+$$Y(F) = f = F(Y(F)),\text{ where }F(f) = f \text{ and } Y(P) = fact $$
+Let's construct the Y Combinator (a starter helper in Silicon Valley.)
+\begin{enumerate}
+    \item let Y = $\lambda$ F . G (G), where G =  $\lambda$ self. F(self(self))
+\end{enumerate}
+
+\begin{equation}
+    \begin{split}
+        \text{Y(P)} &=\text{G(G)}\text{ where } G = \lambda\text{ self. P(self(self))}\\
+&= \text{P(G(G))}\\
+&= \lambda n.\text{ if (n==0) 1 (n * G(G) n-1)}\\
+\end{split}
+\end{equation}
+Suppose Y(P) = fact，then Y(P) = fact = $\lambda$ n. if (n==0) 1 (n * fact n-1)
+
+Only if we have Y, we can transform the pseudo-recursive function into the true recursive function we want. Now when we want to define a recursive function, we just add a self parameter, define it in a pseudo-recursive way, and then use the Y-combination subset to make it the true recursion we want.
+
+\subsection{Turing Equivalence}
+
+We have successfully derived the Y-combinator, which is equivalent to deriving a theorem in the \textbf{lambda calculus} axiomatic system:
+ It is possible to refer to itself in the process of defining a function This theorem is an important step in proving the Turing equivalence of \textbf{lambda calculus}s. What does it mean that the \textbf{lambda calculus} is Turing-equivalent?
+
+It means that its computational power is identical to that of our computers. It means that any program can be described by the \textbf{lambda calculus}, and that the functions described by the \textbf{lambda calculus} must be computable by a computer.
+
+Recall that we just talked about the stopping problem, i.e., the undecidability of whether a Turing machine can stop when given an arbitrary input.
+The equivalent of this proposition in the \textbf{lambda calculus} is: There does not exist an algorithm that can determine whether any two $\lambda$-functions are equivalent, i.e., have f(n) = g(n) for all n.
+
+\subsection{Functional Programming}
+
+Haskell is a purely functional programming language, named in honor of Haskell Curry. Everything in Haskell is a function, not even the concept of variables in imperative programming; all its variables are allowed to be assigned only once and then are immutable, just like the assignment of variables in mathematical derivation.
+
+Haskell also does not have a control flow structure in the usual sense, such as for loops, but instead has recursion. two other important features of Haskell are side-effect free and inertial evaluation. No side effects means that any function given the same input will have the same result every time it is called, and inertial evaluation means that the function will not compute immediately unless needed. Here's Some examples in Haskell:
+
+Before running the Haskell program, first you need to install a GHC compiler, and then run ghci to enter interactive mode. Here are some example
+\begin{enumerate}
+    \item let max a b = if a>b then a else b
+    \begin{enumerate}
+        \item max 3 4 = 4
+        \item max 1.0001 1 = 1.0001
+        \item max "BYVoid" "CmYkRgB123" = "CmYkRgB123"
+    \end{enumerate}
+    \item list X ::= [] | elem: (list  X)
+    \begin{enumerate}
+        \item [1] = 1:[]
+        \item [1, 2, 3] = 1:2:3:[]
+        \item [1,3..] = [1,3,5,...]
+    \end{enumerate}
+    \item \textbf{Pattern Recognition:} let first (elem:rest) = elem
+    \begin{enumerate}
+        \item first [1,3] = 1, pairing (1,3:[])
+    \end{enumerate}
+    \item \textbf{List Sum:} accumulate (elem:rest) = elem + accumulate rest
+    \item \textbf{Palindrome:} palindrome []  = True
+    
+     palindrome [\_] = True
+     
+     palindrome (elem:rest) = (elem == last rest) \&\& (palindrome(init rest))
+     \item \textbf{Lazy Evaluation:} [1,3..] !! 42 = 85
+     \item \textbf{Linear Fibbonacci:} fib = 1:1:zipWith (+) fib (tail fib)
+\end{enumerate}
+
+\section{Recursive Descent Parsers}
+It is a kind of Top-Down Parser. A top-down parser builds the parse tree from the top to down, starting with the start non-terminal. A Predictive Parser is a special case of Recursive Descent Parser, where no Back Tracking is required.
+By carefully writing a grammar means eliminating left recursion and left factoring from it, the resulting grammar will be a grammar that can be parsed by a recursive descent parser.
+
+
+Try writing a recursive descent parser for \textbf{lambda calculus}.  Assume the existence of $LITERAL(C)$, $yynext()$, and $yyerror()$ in flex.
 
 \textbf{Answer:}
 $
@@ -142,24 +226,74 @@ $
 \\
 \\
 \\
-\\
 $
-\section{Pumpingg Lemma}
-Pumping Lemma: For any DFA (or NFA or regular expression) that accepts an
-infinite number of strings, there is some minimum length, \(M,\) such that any string
-with length greater than or equal to \(M\) that the machine accepts must have the form
-\(u x v,\) where \(u, x,\) and \(v\) are strings, \(x\) is not empty, the length of \(u x\) is \(\leq M,\) and the
-machine accepts all strings of the form \(u x^{n} v,\) for all \(n \geq 0\).
-\subsection{Proof of not regular} Let \(A=\left\{1^{j} z \mid z \in\{0,1\}^{*}\right.\) and \(z\) contains at most \(j\) i's, for any \(\left.j \geq 1\right\} .\) Prove, by the
-pumping lemma, that \(A\) is not regular.\\
+
+\subsection{Ambiguous Grammars}
+A grammar is ambiguousif it permits multiple distinct parse trees for some string.For example, without the order of operations, 12−8/4 could parse as 1 or as 10.  Makethe following grammar unambiguous, and also give precedence to ‘/’ over ‘-’.
+
+\begin{verbatim}
+e : INT
+  | e ‘-’ e
+  | e ‘/’ e ;
+\end{verbatim}
+
+As another example is called dangling else, consider the following grammar:
+
+\begin{verbatim}
+e : 0 | 1 ;
+
+stmt : e ’;’
+     | if e then stmt
+     | if e then stmt else stmt ;
+\end{verbatim}
+
+Give an example of a string in the language that can produce multiple parse trees.
+
 \textbf{Answer:}
 $
 \\
 \\
 \\
 \\
+$
+How to resolve the problem?
+
+\textbf{Answer:}
+$
+\\
+\\
+\\
 \\
 $
-http://pfmiles.github.io/blog/left-recursion-removal-using-kleene-closure/
 
+\subsection{Syntax-directed Translation}
+Parser-generators usually support syntax-directed translation, which is a convenientway  to  execute  an  action  every  time  a  grammar  rule  is  matched.   While  definingactions,  the  variable \$\$ refers  to  a  location  into  which  the  semantic  value  of  thecurrent symbol can be stored.  The variables \$1, ...,\$n refer to the semantic values ofthe symbols used to match the current rule.  Here’s an example:
+\begin{verbatim}
+p : e ’;’        { printf("Result: %d\n", $1); }
+
+e : INT          { $$ = $1; }
+  | e ‘-’ e      { $$ = $1 - $3; }
+  | e ‘/’ e      { $$ = $1 / $3; } ;
+\end{verbatim}
+
+Write  a  syntax-directed  translator  for  the  first  grammar  you  wrote  for  this \textbf{Simple Caculator}.
+
+\textbf{Answer:}
+
+$
+\\
+\\
+\\
+\\
+$
+
+Write for \textbf{lambda calculus}.
+
+\textbf{Answer:}
+$
+\\
+\\
+\\
+\\
+$
 \end{document}
