@@ -16,6 +16,7 @@
 \usepackage{multicol}
 \usepackage{listings}
 \usepackage{hyperref}
+\usepackage{listings}
 \usepackage{tikz}
 \usetikzlibrary{automata,positioning}
 \theoremstyle{definition}
@@ -60,7 +61,7 @@ Finite state automata (FSA) are abstract machines that feature states and guarde
 \\
 Before NLP, we utilize state machine to accept languages. Two different perspectives can be considered, namely symbolic and random. chomsky's formal language theory embodies a symbolic approach. Based on this view, a language contains a sequence of symbols that must follow the syntactic rules of its generative grammar. This view reduces the structure of a language to a set of well-defined rules that allow for the decomposition of each sentence and word into structural components.
 \subsection{Examples of accepting x86 Assembly}
-https://github.com/yangminz/bcst\_csapp/blob/src/hardware/cpu/isa.c
+https://github.com/yangminz/bcst\_csapp
 \\
 There are three main types of terminators for assembly instructions: Immediately and Scale for numbers, Reg and Op for characters, and other symbols, including spaces (' '), commas (','), and parentheses ('(',')'). For numeric terminators, we can use Deterministic Finite Automation (DFA) to determine and parse them according to Regular Grammar, see below Figure. It should be noted that the numbers in assembly instructions include positive and negative integers in hexadecimal and decimal, and We need to check whether the value overflows at each state transfer step.
 
@@ -108,21 +109,24 @@ For character type terminators, i.e. operands and registers, we can take a simpl
     % Text Node
     \draw (210,87) node    {$o$};
     % Text Node
-    \draw (144,69) node    {$'e'$};
+    \draw (144,69) node    {$'r'$};
     % Text Node
     \draw (186,56) node    {$'e'$};
     % Text Node
-    \draw (66,96) node    {$'a'$};
+    \draw (66,96) node    {$'e'$};
     % Text Node
     \draw (46,128) node    {$o$};
     % Text Node
     \draw (-1,165) node    {$o$};
     % Text Node
     \draw (19,131) node    {$'x'$};
+    \draw (77,131) node    {$'x'$};
     % Text Node
     \draw (115,123) node    {$o$};
     % Text Node
     \draw (120,97) node    {$'a'$};
+    \draw (190,97) node    {$'x'$};
+    \draw (230,97) node    {$.....$};
     % Text Node
     \draw (66,158) node    {$o$};
     % Text Node
@@ -168,6 +172,41 @@ For character type terminators, i.e. operands and registers, we can take a simpl
     By using prefix trees, searching and matching can be done without traversing the entire array, and the time complexity is reduced to $O(E[strlen])$. In the implementation, a prefix tree can be created for all instruction operator names and register names before executing the CPU instruction cycle, so that the matching time can be reduced during the execution of the instruction cycle. Each node of the prefix tree usually includes a char$\rightarrow$(void *) mapped data structure, where char is the character and (void *) is the address of the subtree. As you can see, the prefix tree is very similar to the DFA, except that the prefix tree automatically builds the state transfer (so it is not streamlined enough), while the DFA requires us to calculate the state transfer in advance.
 \subsection{Examples of accepting yml}
 We cannot do it, because of indent can only be accepted with stack machine.
+
+    \begin{lstlisting}[language={[ANSI]C},
+            numbers=left,
+            numberstyle=\extratiny,
+            basicstyle=\small]
+// Identity definitions
+<whitespace> ::= " " | "\t"
+<in-line-whitespace> ::= <whitespace> | <whitespace> <in-line-whitespace>
+<digit> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+<integer-number> ::= <digit> | <digit> <integer-number>
+<end-of-line> ::= "\r\n" | "\r" | "\n"
+<non-whitespace> ::=
+<non-whitespace-word> ::= <non-whitespace> | <non-whitespace> <non-whitespace-word>
+
+// Basic document structure
+<yaml-stream> ::= <yaml-document-list>
+<yaml-document-list> ::= <yaml-document> | <yaml-document> <yaml-document-list>
+<yaml-document> ::= <yaml-directive-list> <yaml-directives-end> <yaml-content-list>
+        <yaml-document-end>
+<yaml-directive-list> ::= <yaml-directive> <yaml-directive-list> | ""
+<yaml-directive> ::= <yaml-directive-yaml> | <yaml-directive-tag>
+<yaml-directive-yaml> ::= "%YAML" <in-line-whitespace> <integer-number> "." <integer-number>
+         <end-of-line> | ""
+<yaml-directive-tag> ::= "%TAG" <in-line-whitespace> <yaml-tag-handle> <in-line-whitespace> 
+        <yaml-tag-prefix> <end-of-line> <yaml-directive-tag> | ""
+<yaml-tag-handle> ::= "!" | "!!" | "!" <non-whitespace-word> "!"
+<yaml-tag-prefix> ::= "!" <non-whitespace-word> | <non-whitespace-word>
+<yaml-directives-end> ::= "---" | ""
+<yaml-content-list> ::= <yaml-content> <yaml-content-list> | <yaml-content> <end-of-line>
+<yaml-document-end> ::= "..." | ""
+
+// Internals of an individual document
+<yaml-content> ::=
+    \end{lstlisting}
+
 \subsection{What language is accepted by the following DFA?}
 \begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto]
     \node[state,initial,accepting] (q_0)   {$q_0$};
