@@ -1,0 +1,12 @@
+image: registry.gitlab.com/islandoftex/images/texlive:latest
+
+before_script:
+  - apt-get update && apt-get install -y openjdk-8-jre && rm -rf /var/lib/apt/lists/*
+  - tlmgr update --self --all
+
+build:
+  script:
+    - arara -lv *.tex
+  artifacts:
+    paths:
+      - ./*.pdf
