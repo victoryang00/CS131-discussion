@@ -12,7 +12,7 @@ RE$\leftrightarrow\epsilon$-NFA$\leftrightarrow$NFA$\leftrightarrow$DFA$\leftrig
 
 System as a FSA
 
-![image-20210308174109105](/Users/yiweiyang/Library/Application Support/typora-user-images/image-20210308174109105.png)
+![image-20210308174109105](./img/image-20210308174109105.png)
 
 ---
 
@@ -20,28 +20,28 @@ Logic as a MDP NFA
 
 Before NLP, we utilize state machine to accept languages. 
 
-![image-20210308174251452](/Users/yiweiyang/Library/Application Support/typora-user-images/image-20210308174251452.png)
+![image-20210308174251452](./img/image-20210308174251452.png)
 
 ---
 
 Wor2Vec
 
-![image-20210308174351881](/Users/yiweiyang/Library/Application Support/typora-user-images/image-20210308174351881.png)
+![image-20210308174351881](./img/image-20210308174351881.png)
 
-![image-20210308174456341](/Users/yiweiyang/Library/Application Support/typora-user-images/image-20210308174456341.png)
+![image-20210308174456341](./img/image-20210308174456341.png)
 
 Examples of accepting x86 Assembly
 ----------------------------------
 
 https://github.com/yangminz/bcst_csapp/
 
-![image-20210308174724172](/Users/yiweiyang/Library/Application Support/typora-user-images/image-20210308174724172.png)
+![image-20210308174724172](./img/image-20210308174724172.png)
 
 ---
 
 Assembly 模拟器
 
-![image-20210308174757035](/Users/yiweiyang/Library/Application Support/typora-user-images/image-20210308174757035.png)
+![image-20210308174757035](./img/image-20210308174757035.png)
 
 Examples of accepting yml
 -------------------------
@@ -49,7 +49,7 @@ Examples of accepting yml
 We cannot do it, because of indent can only be accepted with stack
 machine.
 
-![image-20210308174838733](/Users/yiweiyang/Library/Application Support/typora-user-images/image-20210308174838733.png)
+![image-20210308174838733](./img/image-20210308174838733.png)
 
 
 
@@ -71,4 +71,4 @@ most $j$ i's, for any $\left.j \geq 1\right\} .$ Prove, by the pumping
 lemma, that $A$ is not regular.\
 **Answer:** 
 
-![image-20210308175046709](/Users/yiweiyang/Library/Application Support/typora-user-images/image-20210308175046709.png)
+![image-20210308175046709](./img/image-20210308175046709.png)
