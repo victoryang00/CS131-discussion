@@ -79,10 +79,7 @@ We describe this in the following pseudo-code:
 
 
 \begin{figure}[H]
-    \begin{lstlisting}[language={[ANSI]C},
-            numbers=left,
-            numberstyle=\extratiny,
-            basicstyle=\small]
+    \begin{lstlisting}[language={[ANSI]C}]
 function halting(func, input) {
     return if_func_will_halt_on_input;
 }
@@ -91,10 +88,7 @@ function halting(func, input) {
 
 and another pseudo-code:
 \begin{figure}[H]
-    \begin{lstlisting}[language={[ANSI]C},
-            numbers=left,
-            numberstyle=\extratiny,
-            basicstyle=\small]
+    \begin{lstlisting}[language={[ANSI]C}]
 function ni_ma(func) {
     if (halting(func, func)) {
         for(;;) //dead loop }
@@ -114,7 +108,7 @@ expr : var
      | ‘(’ expr expr ‘)’ ;
 \end{verbatim}
 
-Use this grammar to construct leftmost and reverse rightmost derivations of the following strings.
+Use this \href{http://s3l.shanghaitech.edu.cn:8081/compiler/discussion3-lambda_test}{grammar} to construct leftmost and reverse rightmost derivations of the following strings.
 $$
 (\lambda f .(\lambda x .(f(f x))))
 $$
@@ -147,7 +141,7 @@ Unfortunately this isn't really recursive, it's just an extra argument passed in
 \textbf{Answer:}
 
 
-\subsection{Fixed Point ${P(fact) = fact}$}
+\subsection{Fixed Point P(fact) = fact}
 What is a fixed point? It is a point (in the generalized sense) that is mapped by a function, and the result obtained is still the point. Imagine a map of China on the wall falls on the floor, there must be and only one point on the map with its actual position.
 \subsection{Magical Y}
 So let's go ahead and assume that there is a magic function Y that finds the immovable point of this pseudo-recursive function, namely:
@@ -193,18 +187,22 @@ Before running the Haskell program, first you need to install a GHC compiler, an
         \item max 1.0001 1 = 1.0001
         \item max "BYVoid" "CmYkRgB123" = "CmYkRgB123"
     \end{enumerate}
-    \item list X ::= [] | elem: (list  X)
+    \item \textbf{List Annotation:}
+    
+    list X ::= [] | elem: (list  X)
     \begin{enumerate}
-        \item [1] = 1:[]
-        \item [1, 2, 3] = 1:2:3:[]
-        \item [1,3..] = [1,3,5,...]
+        \item $\left[ 1 \right]$ = 1:[]
+        \item $\left[ 1,2,3 \right]$ = 1:2:3:[]
+        \item $\left[ 1,3 .. \right]$ = [1,3,5,...]
     \end{enumerate}
     \item \textbf{Pattern Recognition:} let first (elem:rest) = elem
     \begin{enumerate}
         \item first [1,3] = 1, pairing (1,3:[])
     \end{enumerate}
     \item \textbf{List Sum:} accumulate (elem:rest) = elem + accumulate rest
-    \item \textbf{Palindrome:} palindrome []  = True
+    \item \textbf{Palindrome:} 
+    
+    palindrome []  = True
     
      palindrome [\_] = True
      
