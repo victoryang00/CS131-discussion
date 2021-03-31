@@ -50,11 +50,68 @@
 \author{\textbf{杨易为}~~\textbf{季杨彪}~~\textbf{尤存翰} \\ \texttt{ \{yangyw,jiyb,youch\}@shanghaitech.edu.cn}}
 
 
-
 \begin{document}
 \maketitle
-\section{DFA and NFA}
-\subsection{Introduction}
+% \section{DFA and NFA}
+% \subsection{Introduction}
+\section{LL Parsing Ambiguities}
+ An LL(k) grammar is a CFG used by a parser that scans
+input left-to-right (“L”), leftmost derivation (“L”), and uses k tokens of lookahead to
+predict the correct production. We’ve previously seen that a grammar is ambiguous
+if it has a parse tree that is not unique. A more formal definition of LL conflicts uses
+FIRST and FOLLOW sets.
 
+\begin{enumerate}
+  \item \textbf{FIRST(A)}  the set of all terminals that could occur first in an expansion of
+  the terminal or nonterminal A (include $\epsilon$ if A can expand to $\epsilon$)
+  \item \textbf{FOLLOW(A)}  the set of all terminals that could follow an occurrence of the
+  terminal or nonterminal A in a (partial) derivation.
+\end{enumerate}
+
+There are two main types of LL(1) conflicts:
+\begin{enumerate}
+  \item \textbf{FIRST/FIRST} The FIRST sets of two different productions for same nonterminal intersect.
+  \item \textbf{FIRST/FOLLOW}: The FIRST set of a grammar rule contains an epsilon and
+  the intersection with its FOLLOW set is not empty.
+
+\end{enumerate}
+
+Is the following grammar LL(1)? Justify your answer using FIRST and FOLLOW sets.
+\\
+$S → Xd\\  X → C | Ba\\ C →\epsilon \\B → d$
+
+\textbf{Answer:}
+
+\section{Resolving Conflicts}
+Consider the following grammar for numerical expressions with division, addition, and
+unary minus:
+
+$$E → Num | E/E | E + E | − E$$
+
+\begin{enumerate}
+  \item Rewrite the grammar so that it is LL(1), so that ‘/’ has higher precedence than
+  ‘+’, and so that ‘-’ has highest precedence. ‘+’ and ‘/’ should be parsed in a
+  right-associative way.
+  \item  Compute the FIRST and FOLLOW sets for your re-written LL(1) grammar.
+  \item Draw the LL(1) parsing table for the grammar. You may need the following rules:
+  \begin{enumerate}
+    \item  For each production $X \rightarrow A_{1} \ldots A_{n}:$
+    \item For each $1 \leq i \leq n,$ and for each $b$ in First $\left(A_{i}\right):$ Set $T[X, b]=X \rightarrow$
+    $A_{1} \ldots A_{n} .$ Stop when $\epsilon$ is not in First $\left(A_{i}\right) .$
+    \item If $A_{1} \ldots A_{n} \rightarrow^{*} \epsilon,$ then for each $b$ in Follow $(X):$ Set $T[X, b]=\epsilon$
+  \end{enumerate}
+\end{enumerate}
+\textbf{Answer:}
+
+\section{Earley's Algorithm}
+Consider the following CFG with terminals $\{(,),+, *, a, b\}$ (+ represents union) that is
+used to represent regular expressions over alphabet $\{a, b\}$ :
+
+$$R \rightarrow R+R|R R|(R)\left|R^{*}\right| a \mid b$$
+\begin{enumerate}
+  \item Using the above CFG, provide a derivation for the following input string $\left(a+(b a)^{*} b\right)^{*}$.
+  \item For the derivation in above solution, provide the corresponding parse tree.
+\end{enumerate}
+\textbf{Answer:}
 
 \end{document}
