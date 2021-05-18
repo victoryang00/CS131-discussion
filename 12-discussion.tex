@@ -29,7 +29,7 @@
 \lstset{
   basicstyle=\ttfamily\tiny,
   mathescape,
-}
+} 
 \AtBeginDocument{\xpatchcmd{\@thm}{\thm@headpunct{.}}{\thm@headpunct{}}{}{}}
 \makeatother
 
@@ -56,6 +56,38 @@
 
 \begin{document}
 \maketitle
-\section{Scope}
+\section{Object Oriented Programming}
+Recall the $stub$ trick from the lecture, an implementation strategy for multiple inheritance is listed as following:
+
+\begin{verbatim}
+class Base {
+  public:
+    int foo;
+    virtual int f() {
+      std::cout << this << std::endl; 
+      return this->foo;
+    }
+};
+
+class Base2 {
+  public:
+     int bar;
+     virtual int g() {
+      std::cout << this << std::endl; 
+      return this->bar;
+     }
+};
+
+class Derived : public Base, public Base2 {
+  public:
+     int baz;
+     virtual int h() {
+       std::cout << this << std::endl; 
+       return this->baz;
+     }
+};
+\end{verbatim}
+
+
 
 \end{document}
