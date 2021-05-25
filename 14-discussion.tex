@@ -1,0 +1,61 @@
+% !TEX program = xelatex
+\documentclass[a4paper]{article}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage[left=1.8cm,right=1.8cm,top=2.2cm,bottom=2.0cm]{geometry}
+\usepackage{ctex}
+\usepackage{enumerate}
+\usepackage{fancyhdr}
+\usepackage{xpatch}
+\usepackage{graphicx} 
+\usepackage{float} 
+\usepackage{subfigure} 
+\usepackage{amsfonts}
+\usepackage{mathtools}
+\usepackage{framed}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{automata,positioning}
+\theoremstyle{definition}
+\newtheorem*{solution*}{\textbf{Solution:}}
+\newtheorem*{proof*}{\textbf{Proof:}}
+\newtheorem{theorem}{Theorem}[subsection]
+\newtheorem{definition}{Definition}[subsection]
+\newtheorem{lemma}{Lemma}[subsection]
+\makeatletter
+\usepackage{listings}% http://ctan.org/pkg/listings
+\lstset{
+  basicstyle=\ttfamily\tiny,
+  mathescape,
+}
+\AtBeginDocument{\xpatchcmd{\@thm}{\thm@headpunct{.}}{\thm@headpunct{}}{}{}}
+\makeatother
+
+\pagestyle{fancy}
+\renewcommand{\baselinestretch}{1.15}
+
+\usepackage{paralist}
+\let\itemize\compactitem
+\let\enditemize\endcompactitem
+\let\enumerate\compactenum
+\let\endenumerate\endcompactenum
+\let\description\compactdesc
+\let\enddescription\endcompactdesc
+
+% shorten footnote rule
+\xpatchcmd\footnoterule
+  {.4\columnwidth}
+  {1in}
+  {}{\fail}
+
+\title{CS 131 Compilers: Discussion 14: Static and Dynamic Analysis}
+\author{\textbf{杨易为}~~\textbf{季杨彪}~~\textbf{尤存翰} \\ \texttt{ \{yangyw,jiyb,youch\}@shanghaitech.edu.cn}}
+
+
+\begin{document}
+\maketitle
+\section{}
+
+\end{document}
