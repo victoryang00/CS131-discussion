@@ -27,9 +27,9 @@
 \makeatletter
 \usepackage{listings}% http://ctan.org/pkg/listings
 \lstset{
-  basicstyle=\ttfamily\tiny,
+  basicstyle=\ttfamily\small,
   mathescape,
-}
+} 
 \AtBeginDocument{\xpatchcmd{\@thm}{\thm@headpunct{.}}{\thm@headpunct{}}{}{}}
 \makeatother
 
@@ -40,7 +40,7 @@
 \let\itemize\compactitem
 \let\enditemize\endcompactitem
 \let\enumerate\compactenum
-\let\endenum
+\let\endenumerate\endcompactenum
 \let\description\compactdesc
 \let\enddescription\endcompactdesc
 
@@ -56,8 +56,10 @@
 
 \begin{document}
 \maketitle
-\section{Resource Acquisition Is Initialization}
-RAII, which is the compiled time garbage collector first introduced in this \href{thread}{http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2670.htm}, guarantees that the resource is available to any function that may access the object (resource availability is a class invariant, eliminating redundant runtime tests). It also guarantees that all resources are released when the lifetime of their controlling object ends, in reverse order of acquisition. Likewise, if resource acquisition fails (the constructor exits with an exception), all resources acquired by every fully-constructed member and base subobject are released in reverse order of initialization. This leverages the core language features (object lifetime, scope exit, order of initialization and stack unwinding) to eliminate resource leaks and guarantee exception safety. Another name for this technique is Scope-Bound Resource Management (SBRM), after the basic use case where the lifetime of an RAII object ends due to scope exit.
+\section{C++ garbage collection}
+
+\subsection{Resource Acquisition Is Initialization}
+RAII, which is the compiled time garbage collector first introduced in this \href{http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2670.htm}{thread}, guarantees that the resource is available to any function that may access the object (resource availability is a class invariant, eliminating redundant runtime tests). It also guarantees that all resources are released when the lifetime of their controlling object ends, in reverse order of acquisition. Likewise, if resource acquisition fails (the constructor exits with an exception), all resources acquired by every fully-constructed member and base subobject are released in reverse order of initialization. This leverages the core language features (object lifetime, scope exit, order of initialization and stack unwinding) to eliminate resource leaks and guarantee exception safety. Another name for this technique is Scope-Bound Resource Management (SBRM), after the basic use case where the lifetime of an RAII object ends due to scope exit.
 
 RAII can be summarized as follows:
 \begin{enumerate}
@@ -75,5 +77,57 @@ RAII can be summarized as follows:
   Move semantics make it possible to safely transfer resource ownership between objects, across scopes, and in and out of threads, while maintaining resource safety.
 \\
   Classes with open()/close(), lock()/unlock(), or init()/copyFrom()/destroy() member functions are typical examples of non-RAII classes:
+
+  \begin{lstlisting}[language=c]
+#include <bits\stdc++.h>
+
+class ResourceGuard{
+  private:
+    const std::string resource;
+  public:
+    ResourceGuard(const std::string& res):resource(res){
+      std::cout << "Acquire the " << resource << "." <<  std::endl;
+    }
+    ~ResourceGuard(){
+      std::cout << "Release the "<< resource << "." << std::endl;
+    }
+};
+
+int main() {
+  ResourceGuard resGuard1{"memoryBlock1"};
+  std::cout << "\nBefore local scope" << std::endl; {
+    ResourceGuard resGuard2{"memoryBlock2"};
+  }
+  std::cout << "After local scope" << std::endl;
+  std::cout << std::endl;
+  std::cout << "\nBefore try-catch block" << std::endl;
+  try {
+      ResourceGuard resGuard3{"memoryBlock3"};
+      throw std::bad_alloc();
+  }   
+  catch (std::bad_alloc& e){
+      std::cout << e.what();
+  }
+  std::cout << "\nAfter try-catch block" << std::endl;
+  std::cout << std::endl;
+}
+  \end{lstlisting}
 \end{enumerate}
+\subsection{Modern C++ Resource Lifetime}
+\subsubsection{string\_view}
+The string "move" util to make the char like variable, whatever it come from, the fastest to deal with the memory reallocation.
+
+\begin{lstlisting}[language=C]
+#include <string>
+std::size_t length(const std::string &s){
+  return s.size();
+}
+int main(){
+  return length("hello world!");
+}
+\end{lstlisting}
+\subsubsection{PMR}
+
+\subsection{Modern C++ Resource Lifetime}
+
 \end{document}
