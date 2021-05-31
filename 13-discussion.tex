@@ -280,31 +280,28 @@ Suppose it’d be useful to also have a pointer from B back to A. What kind of p
 \end{enumerate}
 Potential use cases for std::weak\_ptr include caching, observer lists, and the prevention of std::shared\_ptr cycles.
 \subsection{Runtime Garbage Collector}
+\includegraphics[width=16cm]{img/Snipaste_2021-05-31_17-46-55.png}\\
+\includegraphics[width=16cm]{img/Snipaste_2021-05-31_17-47-28.png}\\
+\includegraphics[width=16cm]{img/Snipaste_2021-05-31_17-47-56.png}
+
+\subsubsection{Case Study: Go GC}
 There are two main types of garbage collection algorithms, namely, tracing garbage collection algorithm and reference counting method. The three-color tagging method is one of the tracing garbage collection algorithms.
 
 The core idea of tracing algorithm is to determine whether an object is reachable or not, because once the object is not reachable, it can be immediately reclaimed by GC. So how do we determine whether an object is reachable or not? The first step is to find all global variables and variables in the current function stack and mark them as reachable. In the second step, starting from the data already marked, further mark the variables they are accessible to, and so on, in the technical terminology called passing closures.
 
 The Go language garbage collector has been evolving since day one, except for a few versions without major updates, almost every minor release improves the performance of garbage collection, and along with the performance improvement is the complexity of the garbage collector code, \href{https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-garbage-collector/}{this} section will analyze the evolution of the garbage collector starting from the Go language v1.0 version.
+\subsection{Three color label algorithm}
+ \includegraphics[width=10cm]{img/Snipaste_2021-05-31_17-55-13.png}
 
-% \includegraphics[width=10cm]{img/v2-5fe8ea45e2518ca19cfeb31558160fb1_b.gif}
+
+\section{Hard-core Optimization}
+The optimization can be classified as 
 \begin{enumerate}
-  \item v1.0 - a completely serial mark-and-clean process that requires pausing the entire program.
-\item v1.1 - parallel execution of the mark and purge phases of garbage collection on a multicore host11.
-\item v1.3 - runtime added support for accurate scanning of stack memory based on the assumption that only values of pointer types contain pointers, enabling truly accurate garbage collection12.
-\item conversion of unsafe.Pointer types to values of integer types identified as illegitimate, potentially causing serious problems such as hanging pointers.
-\item v1.5 - implemented a concurrent garbage collector based on a three-colored marker sweep13.
-\item drastically reducing the garbage collection latency from several hundred ms to less than 10 ms.
-\item calculating the appropriate time for garbage collection to start and accelerating the garbage collection process through concurrency.
-\item v1.6 - implementation of a decentralized garbage collection coordinator.
-\item explicitly based state machine enabling any Goroutine to trigger state migration for garbage collection.
-\item using dense bitmaps instead of heap memory represented by idle chains to reduce CPU usage during the purge phase14.
-\item v1.7 - reducing garbage collection time to less than 2ms by parallel stack shrinkage15.
-\item v1.8 - reducing garbage collection time to within 0.5ms using a hybrid write barrier16.
-\item v1.9 - completely removed the process of rescanning the stack for suspended procedures17.
-\item v1.10 - updated the implementation of the garbage collection modulator (Pacer) to separate the soft and hard heap size targets18.
-\item v1.12 - simplifying several phases of the garbage collector with a new marked termination algorithm19.
-\item v1.13 - solving the problem of returning memory to the operating system for applications with excessive transient memory usage with a new Scavenger20.
-\item v1.14 - optimizing the speed of memory allocation with a new page allocator21.
+  \item Local Optimizations apply inside a Basic Block
+  \item Global (Intra-procedural) Optimizations apply to a CFG across Basic Blocks
+  \item Inter-procedural Optimizations (过程间优化) apply across method boundaries
 \end{enumerate}
-
+\includegraphics[width=16cm]{img/Snipaste_2021-05-31_17-49-19.png}
+\subsection{Inter-procedural Optimizations}
+循环不变、归纳表达式、常量传播。
 \end{document}
