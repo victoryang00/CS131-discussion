@@ -6,7 +6,7 @@ before_script:
 
 build:
   script:
-    - pdflatex *.tex
+    - xelatex *.tex
   artifacts:
     paths:
       - ./*.pdf
