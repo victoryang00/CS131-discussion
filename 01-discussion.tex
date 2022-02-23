@@ -19,12 +19,14 @@
 \usepackage{float}
 \usepackage{tikz}
 \usepackage{multicol,comment}
+\usepackage{biblatex}
+\addbibresource{01-discussion.bib}
 \usepackage[section]{placeins}
 \makeatletter
 
 \newcommand{\answerprompt}[1][\textbf{Answer:}]{#1}
 
-\printanswers
+\noprintanswers
 
 
 \AtBeginDocument{\xpatchcmd{\@thm}{\thm@headpunct{.}}{\thm@headpunct{}}{}{}}
@@ -183,7 +185,17 @@ Binary sequence that can be divided by 5 without remains.
   \caption{LeetCode 1018. Binary Prefix Divisible By 5}
 \end{figure}
 \begin{solution}
+  \begin{enumerate}
+    \item How many state should the Autometa have? mod 5: $5 .$
+    \item What's the transmission function? think like DP. (小学奥数)
+          \item\begin{enumerate} \item The (current state $^{*} 2+$ the last digit of the binary) $\% 5$
+            \item The current bit is to tell which number $\bmod 5=0 / 1 / 2 / 3 / 4$
+            \item The rest is very easy to calculate.
+          \end{enumerate}\end{enumerate}
+
   DFA to RE refer to \cite{dfatoregex}.
 \end{solution}
-\bibliography{01-discussion}
+
+\printbibliography
+
 \end{document}
