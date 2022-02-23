@@ -45,7 +45,7 @@
   {}{\fail}
 
 \title{CS 131 Compilers: Discussion 1: Lexical Analysis}
-\author{\textbf{杨易为}~~\textbf{季杨彪}~~\textbf{尤存翰} \\ \texttt{ \{yangyw,jiyb,youch\}@shanghaitech.edu.cn}}
+\author{\textbf{杨易为}~~\textbf{吴凌云}~~\textbf{樊雨鑫} \\ \texttt{ \{yangyw,wuly2,fanyx\}@shanghaitech.edu.cn}}
 
 
 
@@ -68,7 +68,7 @@ The eventual process of a compiler is Code Generator to generate machine code, w
 \subsection{Why Both Parser and Lexer?}
 Only lexer in dealing with the C++ code do not deal with nested grammer. The well defined C++ code is even not acceptable by the modern parser.
 
-In the old compiler, We don't recognize vector<vector<> >. For example vector<vector<int> > v, some compiler will compile into vector < vector < int >> v. Other than that, we have Most vexing parse.
+In the old compiler, We don't recognize $vector<vector<> >$. For example $vector<vector<int> >$ v, some compiler will compile into vector < vector < int >> v. Other than that, we have Most vexing parse.
 
 \begin{figure}[H]
     \begin{lstlisting}[language={[ANSI]C},
@@ -187,6 +187,14 @@ $
 
 \subsubsection{Ones and Zeros}
 Even binary numbers without leading 0.
+\\
+\textbf{Answer:}
+$
+\\
+\\
+$
+\subsubsection{Ones and Zeros Plus}
+Binary sequeance that can be divided by 5 without remainings.
 \\
 \textbf{Answer:}
 $

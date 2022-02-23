@@ -3,3 +3,7 @@
 *.out
 *.gz
 *.toc
+*.swp
+.vscode
+.idea
+lecture22.pdf
