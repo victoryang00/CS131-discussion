@@ -3,5 +3,5 @@
 The discussion for the CS131
 
 ## Reference
-1. Berkeley CS161 fall 2011
+1. Berkeley CS164 fall 2011
 2. USTC Compiler

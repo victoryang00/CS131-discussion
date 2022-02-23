@@ -1,9 +1,9 @@
 % !TEX program = xelatex
-\documentclass[a4paper]{article}
+\documentclass[a4paper]{exam}
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage[left=1.8cm,right=1.8cm,top=2.2cm,bottom=2.0cm]{geometry}
-\usepackage{ctex}
+\usepackage[UTF8]{ctex}
 \usepackage{enumerate}
 \usepackage{fancyhdr}
 \usepackage{xpatch}
@@ -14,22 +14,25 @@
 \usepackage{mathtools}
 \usepackage{framed}
 \usepackage{multicol}
-\usepackage{listings}
-\usepackage{hyperref}
-\theoremstyle{definition}
-\newtheorem*{solution*}{\textbf{Solution:}}
-\newtheorem*{proof*}{\textbf{Proof:}}
-\newtheorem{theorem}{Theorem}[subsection]
-\newtheorem{definition}{Definition}[subsection]
-\newtheorem{lemma}{Lemma}[subsection]
+\usepackage{minted}
+\usepackage{fontspec}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{multicol,comment}
+\usepackage[section]{placeins}
 \makeatletter
+
+\newcommand{\answerprompt}[1][\textbf{Answer:}]{#1}
+
+\printanswers
+
 
 \AtBeginDocument{\xpatchcmd{\@thm}{\thm@headpunct{.}}{\thm@headpunct{}}{}{}}
 \makeatother
 
 \pagestyle{fancy}
 \renewcommand{\baselinestretch}{1.15}
-
+\newcommand{\code}[1]{\texttt{#1}}
 \usepackage{paralist}
 \let\itemize\compactitem
 \let\enditemize\endcompactitem
@@ -54,27 +57,24 @@
 \section{Welcome to the Compiler's World}
 \subsection{Some General Views}
 
-We've covered on class that the compiler includes lexical analysis, in which we get tokens. This process is called scanner of the program.
+We've covered in class that the compiler includes lexical analysis, in which we get tokens. This process is called the scanner of the program.
 \begin{center}
-\includegraphics[height=6cm]{img/01-phases.png}
+  \includegraphics[height=6cm]{img/01-phases.png}
 \end{center}
 
-To make detail definition of compiling a program into a machine recognizable text and discuss whether kind of language is "readable" by a Turing Machine or so-called computer, we introduce regular expressions. Formally, we have kleene closure and possitive closure of a language to describe a language. Then NFA, DFA, DFA minimization are tools to accept the language. Regex have some limitation of describing a language and how to evaluate the power of it? Context Free Grammer is introduced and its solution LL Parsing and LR Parsing.
+To make a detailed definition of compiling a program into a machine recognizable text and discuss whether kind of language is readable by a Turing Machine or so-called computer, we introduce regular expressions. Formally, we have Kleene closure and positive closure of a language to describe a language. Then NFA, DFA, DFA minimization are tools to accept the language. Regex has some limitation in describing a language and how to evaluate its power of it? Context Free Grammer is introduced and its solution LL Parsing and LR Parsing.
 
-Till now, we have made the program into a Intermediate Representations, which in our project is Abstract Syntax Tree. We'll then make some type checking on it. This takes into the definition of Operational Semmantics. For modern language like LLVM or those who compiled into LLVM IR, they have a Intermediate Representations where passes can be cast on to optimize the code. Those optimizations are basically machine unrelated. Other intermediate representations include 3 address code and Single Static Code. Some of them are more low level and others are very similar to the AST, which depends how heavy the analysis and the optimization can cast on. We'll cover intra-basic-block optimization，dataflow analysis，security problems like Control Hijacking Attack. Language may alloacate resources on stack or heap, we can do runtime garbage collections to make the resources reallocatable.
+Till now, we have made the program into an Intermediate Representations, which in our project is Abstract Syntax Tree. We'll then make some type checking on it. This takes into the definition of Operational Semantics. For a modern languages like LLVM or those who compiled into LLVM IR, they have Intermediate Representations where passes can be cast on to optimize the code. Those optimizations are basically machine unrelated. Other intermediate representations include 3 address code and Single Static Code. Some of them are more low level and others are very similar to the AST, which depends on how heavy the analysis and the optimization can be cast on. We'll cover intra-basic-block optimization， dataflow analysis， security problems like Control Hijacking attacks. Language may allocate resources on stack or heap, we can do runtime garbage collections to make the resources reallocatable.
 
-The eventual process of a compiler is Code Generator to generate machine code, we'll cover transform the IR into the riscv backend that we've covered on Computer Architechture classes. Wish you a good luck at Compiler class.
+The eventual process of a compiler is Code Generator to generate machine code, we'll cover transforming the IR into the RISC-V backend that we've covered in Computer Architecture classes. Wish you good luck in the Compiler class.
 
 \subsection{Why Both Parser and Lexer?}
-Only lexer in dealing with the C++ code do not deal with nested grammer. The well defined C++ code is even not acceptable by the modern parser.
+Only lexers in dealing with the C++ code do not deal with nested grammar. The well-defined C++ code is even not acceptable by the modern parser.
 
-In the old compiler, We don't recognize $vector<vector<> >$. For example $vector<vector<int> >$ v, some compiler will compile into vector < vector < int >> v. Other than that, we have Most vexing parse.
+In the old compiler, We don't recognize \code{vector<vector<> >}. For example \code{vector<vector<int> > v}, some compiler will compile into \code{vector < vector < int >> v}. Other than that, we have Most vexing parse.
 
 \begin{figure}[H]
-    \begin{lstlisting}[language={[ANSI]C},
-            numbers=left,
-            numberstyle=\extratiny,
-            basicstyle=\small]
+  \begin{minted}[mathescape, linenos]{c}
 struct Timer {};
 struct TimeKeeper {
   explicit TimeKeeper(Timer t);
@@ -84,29 +84,25 @@ int main() {
   TimeKeeper time_keeper(Timer());
   return time_keeper.get_time();
 }
-    \end{lstlisting}
+    \end{minted}
 \end{figure}
 
-TimeKeeper time\_keeper(Timer()); is ambiguous, since it could be interpreted either as a variable definition for variable time\_keeper of class TimeKeeper, initialized with an anonymous instance of class Timer or a function declaration for a function time\_keeper that returns an object of type TimeKeeper and has a single (unnamed) parameter, whose type is a (pointer to a) function[Note 1] taking no input and returning Timer objects.
+TimeKeeper time\_keeper(Timer()); is ambiguous, since it could be interpreted either as a variable definition for variable time\_keeper of class TimeKeeper, initialized with an anonymous instance of class Timer or a function declaration for a function time\_keeper that returns an object of type TimeKeeper and has a single (unnamed) parameter, whose type is a (pointer to a) function[Note 1] taking no input and returning Timer objects. \cite{mvp}
 
-Julia is language with no Lexer and with parser, its parser reads from the string stream to generate the AST. It makes a lot of Context-Sensitive keyword and grammer struct which is difficult to formally describe, functional language's manual is shorter than languages like C++. But we can see that only parser is actually possible to parse the code. The lexer to decide the token is for sake of speed. But Lex/Yacc is fast enough to take over the speed. In Julia, operator and token are the same. import Base.* means import operator* from class Base, also means import all subclasses in class Base.
+Julia is language with no Lexer and with parser, its parser reads from the string stream to generate the AST. It makes a lot of Context-Sensitive keywords and grammar struct which is difficult to formally describe, functional language's manual is shorter than languages like C++. But we can see that only parser is actually possible to parse the code. The lexer to decide the token is for sake of speed. But Lex/Yacc is fast enough to take over the speed. In Julia, operator and token are the same. \code{import Base.*} means import operator* from class Base, also means import all subclasses in class Base.
 
 Thus mere lexer and mere parser are not wise.
 \subsection{How can a simple regex work in your project?}
 \begin{enumerate}
-
-\item Any Search with Regex option.
-\item You can write a plugin for a new language like Julia to support highlighting in vim/vscode/jetbrains.
+  \item Any Search with Regex option.
+  \item You can write a plugin for a new language like Julia to support highlighting in vim/vscode/jetbrains.
 \end{enumerate}
 \subsection{Stages of Compilations}
-\subsubsection{Convert the C++ source code into a sequnce of tokens.}
-Compilers are conceptually broken down into multiple phases, each of which carry outtransformations on a source program towards the compiler’s ultimate goal; the gener-ation of a target program.  The result of each phase is an intermediate representationthat facilitates the implementation of subsequent phases (or,  if it is the last phase,the result is the target program).  The first phase in a compiler, the lexical analyzerorlexer, reads an input stream of characters and converts it into a stream oftokensto be sent to the parser for syntactic analysis.
+\subsubsection{Convert the C++ source code into a sequence of tokens.}
+Compilers are conceptually broken down into multiple phases, each of which carries out transformations on a source program towards the compiler’s ultimate goal; the gener-ation of a target program.  The result of each phase is an intermediate representationthat facilitates the implementation of subsequent phases (or,  if it is the last phase,the result is the target program). The first phase in a compiler, the lexical analyzer or lexer, reads an input stream of characters and converts it into a stream oftokensto be sent to the parser for syntactic analysis.
 
 \begin{figure}[H]
-    \begin{lstlisting}[language={[ANSI]C},
-            numbers=left,
-            numberstyle=\extratiny,
-            basicstyle=\small]
+  \begin{minted}[mathescape, linenos]{c}
 // n! = 1 * 2 * 3 * .... * (n-1) * n
 int factorial(int n) {
     int result = 1;
@@ -114,92 +110,80 @@ int factorial(int n) {
         result *= i;
     return result;
     }
-    \end{lstlisting}
+    \end{minted}
 \end{figure}
 
-
-\textbf{Answer:}
-$
-\\
-\\
-\\
-\\
-\\
-$
+\begin{solution}
+  KEYWORD ("public") KEYWORD ("static") KEYWORD ("int") ID("factorial") LPAREN KEYWORD ("int") ID ("n") RPAREN LCURLY KEYWORD ("int") ID ("result") ASSIGN INTLIT("1") SEMI FOR LPAR KEYWORD("int") ID("i") ASSIGN INTLIT("2") SEMI ID ("i") LEQ ID ("n") SEMI ID("i") OP("++") RPAREN ID("result") OP(*=) ID ("i") SEMI KEYWORD ("return") ID ("result") SEMI RCURLY
+\end{solution}
 \subsubsection{The rest of the compilations.}
-What are the rest of the stages of compilation?  List them in order and write a briefdescription about what they and what they take as input and what they output.\\
-\textbf{Answer:}
-$
-\\
-\\
-\\
-\\
-\\
-$
+What are the rest of the stages of compilation? List them in order and write a brief description about what they and what they take as input and what they output.\\
+
+\begin{solution}
+  \begin{enumerate}
+    \item Parsing: Takes in a stream tokens, outputs an abstract syntax tree (AST), and checks to make sure the program is syntactically correct (matching parentheses, well-formed expressions, etc.)
+    \item Semantic Analysis: Takes in an AST, and makes sure the program makes sense semantically, does type checking as well. Returns a decorated AST (with the corresponding types of variables/expressions/etc. or a IR (intermediate representation) for optimization.
+    \item (Optional) Optimization: Takes in an AST or an IR, and generates an optimized AST or IR.
+    \item Code generation: Takes in an AST or IR and generates code for the specific backend which this compiler is targetting.
+    \item (Optional) Optimization: Takes in the backend code and performs optimizations on that, leaving optimized back-end code.
+    \item \begin{enumerate}
+            \item Executable generation: Takes in assembly files, assembles them into object files, and links object files to form an executable.
+            \item Virtual Machine: Can interpret VM IR code or a decorated AST.
+          \end{enumerate}
+  \end{enumerate}
+\end{solution}
 
 
 
 \section{Regular Expressions}
-The lexer needs to scan and identify finite character sequences that match a pattern corre-sponding to a particular token (the matching strings are also calledlexemes).  Patterns offinite strings can be codified usingregular expressions, each of which specify what is calledaregular language.  Kleene’s theorem states that any regular language can be recognized bya finite state automaton (FSA) and any language that is recognized by an FSA is regular.
+The lexer needs to scan and identify finite character sequences that match a pattern corresponding to a particular token (the matching strings are also called lexemes). Patterns of finite strings can be codified using regular expressions, each of which specifies what is called a regular language. Kleene’s theorem states that any regular language can be recognized by a finite state automaton (FSA) and any language that is recognized by an FSA is regular.
 
 
 \subsection{What language is denoted by each of the following regular expressions?}
-Try writingdown a few simple strings and give a concise description of the language.
+Try to writing down a few simple strings and give a concise description of the language.
 
 \subsubsection{[a-zA-Z][a-zA-Z0-9]$*$}
-\textbf{Answer:}
-$
-\\
-\\
-$
-\subsubsection{$((\epsilon\mid a)b*)*$}
-\textbf{Answer:}
-$
-\\
-\\
-$
+
+\begin{solution}
+  Identifiers
+\end{solution}
+\subsubsection{$((\epsilon\mid a)b*)*$}
+\begin{solution}
+  All strings containing a and b characters, including the empty string. Simplified: $[\mathrm{ab}] *$
+\end{solution}
 \subsection{Write a regular expression for the following languages.}
 \subsubsection{Uppercase Letters}
-    {All strings of uppercase letters, where the letters are in ascending lexicographicorder (empty string allowed).}
-\\
-\textbf{Answer:}
-$
-\\
-\\
-$
+{All strings of uppercase letters, where the letters are in ascending lexicographic order (empty string allowed).}
+\begin{solution}
+  $A * B * \ldots . Z *$
+\end{solution}
 \subsubsection{ShanghaiTech Teacher's email addreess}
-    {xxxx@shanghaitech.edu.cn}, different error handler for different inputs? Suppose you have a large spreadsheet, each row of which has a firstname,lastname,and email column.  You want to find all people who use an email address of the form firstname+lastname@shanghaitech.edu.cn.   Write  a  regular  expression  using  backreferences that describes this pattern.
-\\
-\textbf{Answer:}
-$
-\\
-\\
-$
+{xxxx@shanghaitech.edu.cn}, different error handler for different inputs? Suppose you have a large spreadsheet, each row of which has a firstname,lastname,and email column.  You want to find all people who use an email address of the form firstname+lastname@shanghaitech.edu.cn.   Write  a  regular  expression  using  backreferences that describes this pattern.
+\begin{solution}
+  $(\backslash p\{L\}+),(\backslash p\{L\}+),([0-9]*) \backslash 1 \backslash+\backslash 2+\backslash 3 @shanghaitech.edu.cn$
+\end{solution}
 
 \subsubsection{Months and Dates}
-The following four strings: October 8th, October 8, Oct 8th, Oct 8 (Be as conciseas possible with your regex)
-\\
-\textbf{Answer:}
-$
-\\
-\\
-$
+The following four strings: October 8th, October 8, Oct 8th, Oct 8 (Be as concise as possible with your regex)
+
+\begin{solution}
+  Oct (ober)? $\ $ s8 (th)?
+\end{solution}
 
 \subsubsection{Ones and Zeros}
 Even binary numbers without leading 0.
-\\
-\textbf{Answer:}
-$
-\\
-\\
-$
+\begin{solution}
+  $1[01] * 0 \mid 0$
+\end{solution}
 \subsubsection{Ones and Zeros Plus}
-Binary sequeance that can be divided by 5 without remainings.
-\\
-\textbf{Answer:}
-$
-\\
-\\
-$
-
+Binary sequence that can be divided by 5 without remains.
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\linewidth]{./img/leading_five.png}
+  \caption{LeetCode 1018. Binary Prefix Divisible By 5}
+\end{figure}
+\begin{solution}
+  DFA to RE refer to \cite{dfatoregex}.
+\end{solution}
+\bibliography{01-discussion}
 \end{document}
