@@ -24,9 +24,7 @@
 \usepackage[section]{placeins}
 \makeatletter
 
-\newcommand{\answerprompt}[1][\textbf{Answer:}]{#1}
-
-\noprintanswers
+\printanswers
 
 
 \AtBeginDocument{\xpatchcmd{\@thm}{\thm@headpunct{.}}{\thm@headpunct{}}{}{}}
@@ -89,7 +87,7 @@ int main() {
     \end{minted}
 \end{figure}
 
-TimeKeeper time\_keeper(Timer()); is ambiguous, since it could be interpreted either as a variable definition for variable time\_keeper of class TimeKeeper, initialized with an anonymous instance of class Timer or a function declaration for a function time\_keeper that returns an object of type TimeKeeper and has a single (unnamed) parameter, whose type is a (pointer to a) function[Note 1] taking no input and returning Timer objects. \cite{mvp}
+TimeKeeper time\_keeper(Timer()); is ambiguous, since it could be interpreted either as a variable definition for variable time\_keeper of class TimeKeeper, initialized with an anonymous instance of class Timer or a function declaration for a function time\_keeper that returns an object of type TimeKeeper and has a single (unnamed) parameter, whose type is a (pointer to a) function taking no input and returning Timer objects. \cite{mvp}
 
 Julia is language with no Lexer and with parser, its parser reads from the string stream to generate the AST. It makes a lot of Context-Sensitive keywords and grammar struct which is difficult to formally describe, functional language's manual is shorter than languages like C++. But we can see that only parser is actually possible to parse the code. The lexer to decide the token is for sake of speed. But Lex/Yacc is fast enough to take over the speed. In Julia, operator and token are the same. \code{import Base.*} means import operator* from class Base, also means import all subclasses in class Base.
 

@@ -21,7 +21,8 @@
 
 \AtBeginDocument{\xpatchcmd{\@thm}{\thm@headpunct{.}}{\thm@headpunct{}}{}{}}
 \makeatother
-\printsolutions
+\printanswers
+
 \pagestyle{fancy}
 \renewcommand{\baselinestretch}{1.15}
 
@@ -49,12 +50,10 @@
 \section{DFA and NFA}
 \subsection{Introduction}
 
-Finite state automata (FSA) are abstract machines that feature states and guarded transitions from one state to another. An FSA can only be in one state a time, and its totalnumber of states isfinite.  The machine takes transitions in response to inputs it receivessequentially;  if an input matches the guard of a transition that departs from the currentstate that transition is said to be enabled; only enabled transitions can be taken.  FSA thathave an accepting state provide the machinery to determine whether an input string is in aregular language.  If no transitions are enabled by a given input then the entire input stringgets  rejected.   If  all  inputs  are  processed  and  the  FSA  is  in  an  accepting  state  then  theentire input string is accepted.  Deterministic finite state automata (DFA) can only haveone enabled transition at a time while a non-deterministic finite state automata (NFA) canhave multiple.
+Finite-state automata (FSA) are abstract machines that feature states and guarded transitions from one state to another. An FSA can only be in one state a time, and its totalnumber of states isfinite.  The machine takes transitions in response to inputs it receivessequentially;  if an input matches the guard of a transition that departs from the currentstate that transition is said to be enabled; only enabled transitions can be taken.  FSA thathave an accepting state provide the machinery to determine whether an input string is in aregular language.  If no transitions are enabled by a given input then the entire input stringgets  rejected.   If  all  inputs  are  processed  and  the  FSA  is  in  an  accepting  state  then  theentire input string is accepted.  Deterministic finite state automata (DFA) can only haveone enabled transition at a time while a non-deterministic finite state automata (NFA) canhave multiple.
 \\
-Before NLP, we utilize state machine to accept languages. Two different perspectives can be considered, namely symbolic and random. chomsky's formal language theory embodies a symbolic approach. Based on this view, a language contains a sequence of symbols that must follow the syntactic rules of its generative grammar. This view reduces the structure of a language to a set of well-defined rules that allow for the decomposition of each sentence and word into structural components.
-\subsection{Examples of accepting x86 Assembly}
-https://github.com/yangminz/bcst\_csapp
-\\
+Before NLP, we utilize state machines to accept languages. Two different perspectives can be considered, namely symbolic and random. chomsky's formal language theory embodies a symbolic approach. Based on this view, a language contains a sequence of symbols that must follow the syntactic rules of its generative grammar. This view reduces the structure of a language to a set of well-defined rules that allow for the decomposition of each sentence and word into structural components.
+\subsection{Examples of accepting x86 Assembly\cite{bcst}}
 There are three main types of terminators for assembly instructions: Immediately and Scale for numbers, Reg and Op for characters, and other symbols, including spaces (' '), commas (','), and parentheses ('(',')'). For numeric terminators, we can use Deterministic Finite Automation (DFA) to determine and parse them according to Regular Grammar, see below Figure. It should be noted that the numbers in assembly instructions include positive and negative integers in hexadecimal and decimal, and We need to check whether the value overflows at each state transfer step.
 
 \begin{tikzpicture}[shorten >=1pt,node distance=2.6cm,on grid,auto]
@@ -253,7 +252,21 @@ We cannot do it, because of indent can only be accepted with stack machine.
 
 \subsection{Construct the NFA that accepts}
 \subsubsection{$x(zy?|(yz)*)$}
-\textbf{Answer:}
+\begin{solution}
+    \begin{tikzpicture}[shorten >=1pt,node distance=2cm,on grid,auto]
+        \node[state,initial,accepting] (q_0)   {$q_0$};
+        \node[state] (q_3) [ right=of q_0] {$q_3$};
+        \path[->]
+        (q_0) 
+            edge  node  [above]{0,1} (q_1)
+        (q_1) edge  node  {0,1} (q_2)
+        (q_2) edge  node  {0,1} (q_3)
+        (q_3) edge  node  {0,1} (q_4)
+        (q_4) edge  node  {0,1} (q_5)
+        (q_5) edge [loop above] node {0,1} ();
+    \end{tikzpicture}
+\end{solution}
+
 \subsubsection{$(10)*1*01*0$}
 \textbf{Answer:}
 
@@ -284,6 +297,7 @@ $
 \\
 \\
 $
+\end{enumerate}
 \section{Pumpingg Lemma}
 Pumping Lemma: For any DFA (or NFA or regular expression) that accepts an
 infinite number of strings, there is some minimum length, \(M,\) such that any string
