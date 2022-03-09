@@ -9,3 +9,5 @@
 lecture22.pdf
 _minted*
 *.pdf
+*.blg
+*.bbl
