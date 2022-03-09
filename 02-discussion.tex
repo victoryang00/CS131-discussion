@@ -418,12 +418,12 @@ When we call \textbf { ni\_ma(ni\_ma) }. We can't deduce whether it is halting o
 
 Here comes the \textbf{lambda calculus}, Consider the following \textbf{lambda calculus} grammar:
 \subsection{What language is accepted by the following DFA?}
-\begin{verbatim}
+\begin{alltt}
 var  : ID ;
 expr : var
-     . ‘(’ ‘l’ var ‘.’ expr ‘)’
+     . ‘(’ ‘\(\lambda\)’ var ‘.’ expr ‘)’
      | ‘(’ expr expr ‘)’ ;
-\end{verbatim}
+\end{alltt}
 
 Use this \cite{lambdacpptest} to construct leftmost and reverse rightmost derivations of the following strings.
 \\
