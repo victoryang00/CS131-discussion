@@ -1,0 +1,40 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+ build:
+   name: Build
+   runs-on: ubuntu-latest
+   steps:
+     - uses: actions/checkout@master
+       with:
+         fetch-depth: 2
+     - name: run docker container
+       uses: docker://yangyw12345/tex-builder
+       with:
+         args: make all
+     - name: Create Release
+       id: create_release
+       uses: actions/create-release@v1
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+       with:
+         tag_name: ${{ github.ref }}
+         release_name: Release ${{ github.ref }}
+         body: |
+           Changes in this Release
+           - First Change
+           - Second Change
+         draft: false
+         prerelease: false
+     - name: Upload Assets to Release with a wildcard
+       uses: csexton/release-asset-action@v2
+       with:
+         pattern: "*/*.pdf"
+         github-token: ${{ secrets.GITHUB_TOKEN }}
+         release-url: ${{ steps.create_release.outputs.upload_url }}
