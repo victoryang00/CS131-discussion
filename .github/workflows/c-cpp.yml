@@ -17,7 +17,7 @@ jobs:
      - name: run docker container
        uses: docker://yangyw12345/tex-builder
        with:
-         args: make all
+         args: make
      - name: Create Release
        id: create_release
        uses: actions/create-release@v1
