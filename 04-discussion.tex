@@ -1,6 +1,7 @@
 % !TEX program = xelatex
 \documentclass[a4paper]{exam}
 \usepackage{amsmath}
+\usepackage{stmaryrd}
 \usepackage{amsthm}
 \usepackage[left=1.8cm,right=1.8cm,top=2.2cm,bottom=2.0cm]{geometry}
 \usepackage[UTF8]{ctex}
@@ -21,6 +22,7 @@
 \usepackage{alltt}
 \usepackage{multicol,comment}
 \usepackage{biblatex}
+\usepackage{amssymb}
 \addbibresource{04-discussion.bib}
 \usetikzlibrary{automata,positioning}
 \usepackage[section]{placeins}
@@ -64,7 +66,7 @@ $\begin{array}{ll}\text { Production } & \underline{\text { Semantic Rules }} \\
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.4\columnwidth]{./img/CSc.png}
+  \includegraphics[width=0.4\columnwidth]{./CSc.png}
 \end{figure}
 \begin{enumerate}
   \item \textbf{S-Attributed Definitions} only use Synthesized Attributes. Semantic Action is to put the action in at the end.
@@ -90,10 +92,6 @@ $$A^{\prime} \rightarrow \varepsilon\left\{\mathrm{A}^{\prime} .\right.\text{syn
 
 \subsection{TopLevelDeclList implementation in ChocoPy}
 \begin{minted}[mathescape, linenos]{c++}
-std::vector<parser::Stmt *>* combine(std::vector<parser::Stmt *>* list, parser::Stmt *item) {
-    list->push_back(item);
-    return list;
-}
 top_level_decl : top_level_decl var_def {
                   $$ = combine($1, $2);
                }
@@ -175,7 +173,7 @@ Here we put a benign testcases and adversarial testcases
 
         This inner is a closure(lambda function). The way closures are implemented in Python is to hold a pointer to an external namespace (which can be interpreted as a dictionary).
         \\
-        \textbf{Question:} What's the result of the following output?
+         What's the result of the following output?
         \begin{minted}[mathescape, linenos]{python}
 def make_averager():
     count = 0
@@ -192,7 +190,8 @@ print(averager(10))
 print(averager(11))
 \end{minted}
         \begin{solution}
-
+10.0\\
+10.5
         \end{solution}
   \item The malicious one
         \begin{minted}[mathescape, linenos]{python}
@@ -282,12 +281,13 @@ return result;
 }
 \end{minted}
 
-\textbf{Problem:} What is the above code impls of scoping, evaluation at which time and how \textbf{eval()} interact with input strings?
+What is the above code impls of scoping, evaluation at which time and how \textbf{eval()} interact with input strings?
 
 \begin{solution}
+The eval will be evaluate after the scope analyzer. If \texttt{print(a)} exists, it will add \texttt{a} to the \texttt{locals}. The \texttt{Globals} and \texttt{locals} are passed into the scope.
 \end{solution}
 \subsubsection{The Scope of Decorator}
-When we analyze the calling process of a unknown procedure. The decorator in Python is to make the grammar nice and neat. If you work for Python Open Source community, you must have heard of PEP8 \cite[pep8]. Utilizing Decorator and other grammar sweet is a good way, and also may give you a insight to understand others' reason of writing so. For a general view, a language is all about its grammar sweet.
+When we analyze the calling process of a unknown procedure. The decorator in Python is to make the grammar nice and neat. If you work for Python Open Source community, you must have heard of PEP8 \cite{pep8}. Utilizing Decorator and other grammar sweet is a good way, and also may give you a insight to understand others' reason of writing so. For a general view, a language is all about its grammar sweet.
 
 \includegraphics[width=15cm]{./img/b5674ca16f72af11d7a1c70602fbfe10_b.png}
 
@@ -368,7 +368,7 @@ from .cloudpickle import (
 )
 \end{minted}
 \section{Type System}
-A type is a set of values together with a set of operations on those values. A language's type system specifies which operations are valid for which types.
+A type is a set of values together with a set of operations on those values. A language's type system specifies which operations are valid for which types. Jane street has a debate of dynamical type and static type. \cite{janestreetcode}
 
 
 The notion of "correctness" often depends on what the programmer has in mind, rather than what the representation would allow.
@@ -400,44 +400,63 @@ Define \cite{cs164lec12} a really easy typeof to connect with operational semant
 
 Begin with two typing rules.
 \begin{verbatim}
-  typeof(X, int,) :- integer(X).
+  typeof(X, int,_) :- integer(X).
   typeof(X, T, Env) :- defn(X, T, Env).
 \end{verbatim}
 
 \begin{enumerate}
-  \item Write a typing rule such that the type of an empty list is unbounded (e.g [\_]).
+  \item Write a typing rule such that the type of an empty list is unbounded (e.g \texttt{[\_]}).
 
         \begin{solution}
-
+\begin{verbatim}   
+typeof ([],[_], _)
+\end{verbatim}
         \end{solution}
 
   \item  Write a typing rule such that the type of a list is [T], where all list elements are of type T.
 
         \begin{solution}
-
+\begin{verbatim}
+typeof ([E|R], [T], Env) :- typeof (E, T, Env), typeof (R,[T], Env)
+\end{verbatim}
         \end{solution}
 
   \item Write a typing rule such that the type of a lambda is $T1->T2$, where $T2$ is the return type and $T1$ is the type X is bound to within the body of the lambda.
 
         \begin{solution}
-
+\begin{verbatim}
+typeof(lambda(X, E), T1->T2, Env) :- typeof(E, T2, [def(X, T1)| Env])
+\end{verbatim}
         \end{solution}
 
   \item Write a typing rule such that the type of $L + R$ is int when L and R are both of type int.
 
         \begin{solution}
-
+\begin{verbatim}
+typeof(L + R, int, Env) :- typeof(L, int, Env), typeof(R, int, Env)
+\end{verbatim}
         \end{solution}
 
-  \item Write a typing rule such that the type of $L // R$ is [T] when L and R are both of type [T].
+  \item Write a typing rule such that the type of $L // R$ is \texttt{[T]} when L and R are both of type \texttt{[T]}.
 
         \begin{solution}
-
+\begin{verbatim}
+typeof(L // R, [T], Env) :- typeof(L, [T], Env), typeof(R, [T], Env)
+\end{verbatim}
         \end{solution}
+        
+  \item Write a typing rule such that the type of $L << R$ is T2 when L is of type T1 -> T2 and R is of type T1.
+  \begin{solution}
+  \begin{verbatim}
+typeof(L << R, T2, Env) :- typeof(R, T1, Env), typeof(L, T1->T2,Env)
+\end{verbatim}
+  \end{solution}
   \item Write a typing rule such that the type of $cast(L,R)$ is $T1 -> T2$ when L is of type $T1$ and R is of type $T2$.
 
         \begin{solution}
-
+\begin{verbatim}
+typeof(cast(L, R), T1 -> T2, Env) :- typeof(L, T1, Env), typeof(R, T2, Env)
+\end{verbatim}
         \end{solution}
 
 \end{enumerate}
@@ -449,41 +468,56 @@ typeof(f << g, T, [def(f, int->[int]), def(g, int)]).
   \end{verbatim}
 
         \begin{solution}
-
+\begin{verbatim}
+T = [int]
+\end{verbatim}
         \end{solution}
-  \item \begin{verbatim}
-typeof(lambda(x, x // x) << [1], T, []).
-  \end{verbatim}
+  \item \begin{alltt}
+typeof(\(\lambda\)(x, x // x) << [1], T, []).
+  \end{alltt}
 
         \begin{solution}
-
+\begin{verbatim}
+T = [int]
+\end{verbatim}
         \end{solution}
-  \item \begin{verbatim}
-typeof(lambda(x, x + x) << 1, T, []).
-  \end{verbatim}
+  \item \begin{alltt}
+typeof(\(\lambda\)(x, x + x) << [1], T, []).
+  \end{alltt}
 
         \begin{solution}
-
+false
         \end{solution}
-  \item \begin{verbatim}
-typeof(lambda(x, x + x) + 1, T, []).
-  \end{verbatim}
-        \begin{solution}
-
-        \end{solution}
-  \item \begin{verbatim}
-typeof(lambda(x, x // x) << [lambda(x, x // x)], T, []).
-  \end{verbatim}
+  \item \begin{alltt}
+typeof(\(\lambda\)(x, x + x) << 1, T, []).
+  \end{alltt}
 
         \begin{solution}
-
+int
         \end{solution}
-  \item \begin{verbatim}
-typeof(lambda(x,lambda(y, cast(x,y))) << [lambda(x,lambda(y, cast(x,y)))],T, []).
-  \end{verbatim}
+  \item \begin{alltt}
+typeof(\(\lambda\)(x, x + x) + 1, T, []).
+  \end{alltt}
+        \begin{solution}
+false
+        \end{solution}
+  \item \begin{alltt}
+typeof(\(\lambda\)(x, x // x) << [\(\lambda\)(x, x // x)], T, []).
+  \end{alltt}
 
         \begin{solution}
+\begin{verbatim}
+[[T1]->[T1]]
+\end{verbatim}
+        \end{solution}
+  \item \begin{alltt}
+typeof(\(\lambda\)(x,\(\lambda\)(y, cast(x,y))) << [\(\lambda\)(x,\(\lambda\)(y, cast(x,y)))],T, []).
+  \end{alltt}
 
+        \begin{solution}
+\begin{verbatim}
+(T3->[(T1->(T2->(T1->T2)))]->T3)
+\end{verbatim}
         \end{solution}
 
 \end{enumerate}
@@ -552,7 +586,7 @@ By analogy, a free variable is a global variable and a bound variable is a local
         The necessity of $\alpha$-conversion is that we sometimes need to rename other variables in $M$ when computing $M[x:=N]$, for example, $(\lambda y \cdot x y)[x:=(y z)]$ should become $(\lambda a \cdot(y z) a)$ instead of $(\lambda y \cdot(y z) a). \lambda y \cdot(y z) y)$. The latter would cause $y$ to be bound incorrectly when it should be free.
         There is also something called $\eta$-conversion, which presumably means that when $x$ does not appear free in $M$, $\lambda x . M x \equiv M$. This is generally unnecessary, but it's not usually a problem to add.
   \item $\beta$-reduction
-        The reduction rule is called $\beta$-reduction, and it is also simple: $(\lambda x . M) N \rightarrow M[x:=N]$. Sometimes it is also written as $\twoheadrightarrow{ } _ {\beta}$.
+        The reduction rule is called $\beta$-reduction, and it is also simple: $(\lambda x . M) N \twoheadrightarrow M[x:=N]$. Sometimes it is also written as $\twoheadrightarrow{ } _ {\beta}$.
 
         Two terms $M, N$ are said to be equal if they are reducible to the exact same term, denoted as $M=N$ or $M={ } _ {\beta} N$
 \end{enumerate}
@@ -586,7 +620,7 @@ Both of these steps use the (ABS) rule. An easy way to write them is to leave ou
 $$
   \cfrac{\cfrac{\cfrac{\{x:A\}^2\quad\{y:B\}^1}{x:A}}{(\lambda y.x):(B\to A)}\small1}{(\lambda x.\lambda y.x):(A\to B\to A)}\small2
 $$
-Since you can't type a strikethrough, please imagine changing the brackets to a strikethrough (
+Since you can't type a strike through, please imagine changing the brackets to a strike through (
 
 That is, cross out $y:B$ at step 1 (because it is out of context after this step) and cross out $x:A$ at step 2 of the derivation.
 
@@ -600,7 +634,7 @@ There are some properties (theorems) in the $\lambda_\to$ system, such as
   \item if $\Gamma\vdash M:A,M\twoheadrightarrow _ \beta M'$, then $\Gamma\vdash M':A$ (the converse does not hold, e.g. $(\lambda y.\lambda x.x)(yy)$ has no type).
   \item if $\Gamma\vdash M:A,\Gamma\vdash M':A',M={ }_\beta M'$, then $A\equiv A'$.
 \end{enumerate}
-
+\end{enumerate}
 \subsubsection{Curry-Howard isomorphism \cite{softwarefoundation}}
 
 \textbf{Curry-Howard Isomorphism} establishes a correspondence between type systems and formal logic systems (types are propositions, programs are proofs).
@@ -610,14 +644,12 @@ The $\lambda_\to$ type system then corresponds to propositional logic. Consider 
 In this case, since $A$ implies $B$ is equivalent to "if you have a proof of $A$, you can construct a proof of $B$", it is equivalent to "given a term of type $A$, apply this function to obtain a term of type $B$ " is equivalent.
 
 As an example, two of the axioms in a system of propositional logic that uses only implication are
-$$
-  A\to (B\to A);\\
-  (A\to(B\to C))\to((A\to B)\to(A\to C))
-$$
+$$A\to (B\to A);$$
+$$(A\to(B\to C))\to((A\to B)\to(A\to C))$$
 Corresponding to the type, this can be given by the following term.
 $$
-  \lambda x.\lambda y.x\\
-  \lambda x.\lambda y.\lambda z.xz(yz)
+  \lambda x.\lambda y.x$$
+$$  \lambda x.\lambda y.\lambda z.xz(yz)
 $$
 Separation rules
 $$
@@ -637,32 +669,31 @@ Then we can define $\lnot A=A\to\bot$.
 
 Then a new problem arises: we cannot get such a term: $\lnot(\lnot A)\to A$. Without such a term, the converse is not possible (the essence of the converse method is to prove that the negation of the original proposition is false, thus proving that the original proposition is true). So after adding $\bot$ $\lambda_\to$ in fact corresponds to \textbf{intuitionist logic}, or what is called \textbf{constructionist logic}, because we can essentially only construct a proof, and cannot do so by the law of the row ($A\lor\lnot A$), the law of the quadratic reciprocal inverse ($\lnot(\lnot A)\to A$), unless We keep such type of terms in Context (i.e., set as axioms).
 
-\subsubsection{Type Checking in ChoocoPy}
+\subsubsection{Type Checking in ChoocoPy \cite{cs164chocopy}}
 ChocoPy start with the following environment:
 
 $$O( len )=\{ object \rightarrow int ; arg \}$$
-$$O( print )=\{ object \rightarrow\langle None >; arg \}$$
+$$O( print )=\{ object \rightarrow< None >; arg \}$$
 $$O( input )=\{\rightarrow str \}$$
-$$M( object,\_\_init\_\_ )=\{ object \rightarrow\langle None >; self \}$$
-$$M( str,\_\_init\_\_ )=\{ object \rightarrow\langle None >; self \}$$
-$$M( int,\_\_init\_\_ )=\{ object \rightarrow\langle None \rangle; self \}$$
+$$M( object,\_\_init\_\_ )=\{ object \rightarrow< None >; self \}$$
+$$M( str,\_\_init\_\_ )=\{ object \rightarrow< None >; self \}$$
+$$M( int,\_\_init\_\_ )=\{ object \rightarrow< None >; self \}$$
 $$M( bool,\_\_init\_\_ )=\{ object \rightarrow< None >; self \}$$
 
 It will iterate to check all the not checked variable.
-$$
-\begin{tabular}{l}
-$O, M, \perp, \perp\quad \vdash \text { program }$
-\\\hline $  \vdash \text { program }$
-\end{tabular}
-$$
-For function def, the easier with the variable def.
+
+$$O, M, \perp, \perp\quad \vdash \text { program }$$
+\hline $$  \vdash \text { program }$$
+
+
+For function def, the easier with the function def. First check the return type if it's defined. Then check the arguments and the body whether return type is right. 
 $$
   \begin{tabular}{l}
-    $T=\left\{\begin{array}{l}T_{0}, \quad \text { if }->\text { is present, } \\ \text { <None>, otherwise. }\end{array}\right.$                                   \\
+    $T=\left\{\begin{array}{l}T_{0}, \quad \text { if -> is present, } \\ \text { <None>, otherwise. }\end{array}\right.$                                   \\
     $O(f)=\left\{T_{1} \times \ldots \times T_{n} \rightarrow T_{0} ; x_{1}, x_{2}, \ldots, x_{n} ; v_{1}: T_{1}^{\prime}, \ldots, v_{m}: T_{m}^{\prime}\right\}$   \\
     $n \geq 0 \quad m \geq 0$                                                                                                                                       \\
     $ O\left[T_{1} / x_{1}\right] \ldots\left[T_{n} / x_{n}\right]\left[T_{1}^{\prime} / v_{1}\right] \ldots\left[T_{m}^{\prime} / v_{m}\right], M, C, T \vdash b $ \\
-    \hline$ O, M, C, R \vdash \operatorname{def} f\left(x_{1}: T_{1}, \ldots, x_{n}: T_{n}\right) \llbracket \rightarrow T_{0} \rrbracket^{?}: b}$
+    \hline$$ O, M, C, R \vdash \operatorname{def} f\left(x_{1}: T_{1}, \ldots, x_{n}: T_{n}\right) \llbracket \rightarrow T_{0} \rrbracket^{?}: b$$
   \end{tabular}
 $$
 \subsection{Type Inference}
@@ -688,21 +719,43 @@ $$
     \hline$O, M, C, R \vdash\left[e_{1}, e_{2}, \ldots, e_{n}\right]:[T]$
   \end{tabular}
 $$
+Here are two groups of examples
+\begin{enumerate}
+    \item bool+int vs. str+int
 $False + 8 \quad \# \textcolor{green}{OK}$\\
 $"False" + 8\quad \# \textcolor{red}{ERROR}$\\
-\\
+ \item The object list can be to infer the type object in the second case. however, int list is not able to make equal to object list.
 $\mathrm{x}:[$ object $]=$ None\\
 $\mathrm{x}=[3, \mathrm{x}] \quad \# \textcolor{green}{OK}$\\
 $x = [3]\quad\quad \# \textcolor{red}{ERROR}$
-
-Subclass can be used to function arg passing.
+\item 
+\begin{minted}[mathescape]{python}
+class A(object):
+    a:B=None
+    def __init__(self:A,other:B)->object:
+        a=other
+class B(object):
+    pass
+class C(B):
+    pass
+a:A=None
+b:A=None
+c:B=None
+d:C=None
+a=A(b)
+b=A(c)
+a=b
+\end{minted}
+ Subclass can be used to function arg passing.
+\end{enumerate}
 \subsection{Type Unification}
-To unify two type expressions is to find substitutions for all type variables that make the expressions identical. This technique will be useful for typecases, or you will not pass all the testcases. The algorithm that follows treats type expressions as objects (so two type expressions may have identical content and still be different objects). All type variables with the same name are represented by the same object. It generalizes binding by allowing all type expressions (not just type variables) to be bound to other type expressions.
+To unify two type expressions is to find substitutions for all type variables that make the expressions identical. The algorithm that follows treats type expressions as objects (so two type expressions may have identical content and still be different objects). All type variables with the same name are represented by the same object. It generalizes binding by allowing all type expressions (not just type variables) to be bound to other type expressions.
+
 \begin{figure}[htbp]
 
   \centering
   \includegraphics[width=10cm]{img/Snipaste_2021-05-08_04-55-14.png}
-  \subsubsection{Type Unification in ChocoPy}
+  \subsubsection{Type Unification in ML}
 \end{figure}
 
 \begin{figure}[htbp]
@@ -719,21 +772,20 @@ To unify two type expressions is to find substitutions for all type variables th
   \centering
   \includegraphics[width=10cm]{./img/recursive_type.png}
 \end{figure}
-
+  \subsubsection{Typecases in ChocoPy}
 \begin{minted}[mathescape]{python}
-
-
-
-
 class A(object):
     a:int = 42
 class B(A):
     b:bool = True
+    def __init__(self:"B")->object:
+        self.a = 38
 class C(B):
     c:bool = True
-
+    def __init__(self:"C")->object:
+        self.a = 32
 b:A=None
-d:str=""
+d:str=input()
 b=A()
 if d=="sb":
     b=C()
