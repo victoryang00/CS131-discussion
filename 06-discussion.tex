@@ -1,9 +1,9 @@
 % !TEX program = xelatex
-\documentclass[a4paper]{article}
+\documentclass[a4paper]{exam}
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage[left=1.8cm,right=1.8cm,top=2.2cm,bottom=2.0cm]{geometry}
-\usepackage{ctex}
+\usepackage[UTF8]{ctex}
 \usepackage{enumerate}
 \usepackage{fancyhdr}
 \usepackage{xpatch}
@@ -14,9 +14,15 @@
 \usepackage{mathtools}
 \usepackage{framed}
 \usepackage{multicol}
-\usepackage{listings}
-\usepackage{hyperref}
+\usepackage{minted}
+\usepackage{fontspec}
+\usepackage{float}
 \usepackage{tikz}
+\usepackage{multicol,comment}
+\usepackage{biblatex}
+\addbibresource{06-discussion.bib}
+\usepackage{tikz}
+
 \usetikzlibrary{automata,positioning}
 \theoremstyle{definition}
 \newtheorem*{solution*}{\textbf{Solution:}}
@@ -46,211 +52,298 @@
   {1in}
   {}{\fail}
 
-\title{CS 131 Compilers: Discussion 6: Introduction to Modern Intermediate Representation}
-\author{\textbf{杨易为}~~\textbf{季杨彪}~~\textbf{尤存翰} \\ \texttt{ \{yangyw,jiyb,youch\}@shanghaitech.edu.cn}}
-
+\title{CS 131 Compilers: Discussion 6: More on Modern Intermediate Representation}
+\author{\textbf{杨易为}~~\textbf{吴凌云}~~\textbf{樊雨鑫} \\ \texttt{ \{yangyw,wuly2,fanyx\}@shanghaitech.edu.cn}}
 
 \begin{document}
 \maketitle
-\section{Reusable IR}
-\begin{enumerate}
-   \item Modern compilers are made from loosely coupled components. 
-   \item Front ends produce IR, AST as well. Thus they have to maintain all the information on Basic Block.
-   \item Middle ‘ends’ transform IR (optimisation / analysis / instrumentation)
-   \item Back ends generate native code (object code or assembly)
- \end{enumerate}
+\section{Object Oriented Programming}
+Recall the $stub$ trick from the lecture, an implementation strategy for multiple inheritance is listed as following:
 
- \begin{center}
-  \includegraphics[height=3cm]{img/Snipaste_2021-04-05_17-18-11.png}
-  \end{center}
-  
-  As with any other piece of software using libraries simplifies development.
-  
-  \subsection{Optimisation Passes}
+\begin{verbatim}
+class Base {
+  public:
+    int foo;
+    virtual int f() {
+      std::cout << this << std::endl; 
+      return this->foo;
+    }
+};
+
+class Base2 {
+  public:
+     int bar;
+     virtual int g() {
+      std::cout << this << std::endl; 
+      return this->bar;
+     }
+};
+
+class Derived : public Base, public Base2 {
+  public:
+     int baz;
+     virtual int h() {
+       std::cout << this << std::endl; 
+       return this->baz;
+     }
+};
+\end{verbatim}
+
+To overcome this issue, compilers will move the this pointer so that each method sees what it expects. For simplicity, they actually create stub methods that will move the this pointer before calling the original method. For example, the compiler may generate
+
+\begin{verbatim}
+  Base2::g’() { move_this_pointer(); g(); }
+\end{verbatim}
+
+\begin{enumerate}
+  \item Roughly sketch the class layout of the above classes (using the same 4-byte offset convention  from  the  inheritance  lecture).   ForDerived,  assumeh()is  storedinside its own version ofBase’s vtable.
+  \item What will the following print (assuming there is no padding)?
+        \begin{verbatim}
+    Derived a;
+    std::cout << &a << std::endl; // Suppose this prints 0x10
+    a.f();
+    a.g();
+    a.h();
+  \end{verbatim}
+\end{enumerate}
+\subsubsection{C++ OOP implementation in LLVM IR}
+
+\subsubsection{ChocoPy OOP Mapping on Light IR}
+Here's an example of OOP in ChocoPy
+\begin{minted}[mathescape, linenos]{python}
+class A(object):
+    a:int = 42
+    def foo(self:"A", ignore:object) -> int:
+        return self.a
+    def bar(self:"A") -> int:
+        print("A")
+        return 0
+class B(A):
+    b:bool = True
+    def __init__(self:"B"):
+        print("B")
+    def bar(self:"B") -> int:
+        print("B")
+        return 0
+class C(B):
+    c:bool = True
+    def __init__(self:"C"):
+        print("C")
+    def foo1(self:"C") -> int:
+        print("B")
+        return 0
+    def bar(self:"C") -> int:
+        print("C")
+        return 0
+\end{minted}
+The dispatch table will be the following.
+\begin{minted}[mathescape, linenos]{llvm}
+.globl $A$dispatchTable
+$A$dispatchTable:
+  .word $object.__init__                   # Implementation for method: A.__init__
+  .word $A.foo                             # Implementation for method: A.foo
+  .word $A.bar                             # Implementation for method: A.bar
+
+.globl $B$dispatchTable
+$B$dispatchTable:
+  .word $B.__init__                        # Implementation for method: B.__init__
+  .word $A.foo                             # Implementation for method: B.foo
+  .word $B.bar                             # Implementation for method: B.bar
+
+.globl $C$dispatchTable
+$C$dispatchTable:
+  .word $C.__init__                        # Implementation for method: C.__init__
+  .word $A.foo                             # Implementation for method: C.foo
+  .word $C.bar                             # Implementation for method: C.bar
+  .word $C.foo1                            # Implementation for method: C.foo1
+\end{minted}
+
+\subsection{Exceptions and Code Generation}
+In  this  question  we’ll  look  at  how  the  set\_jmp/long\_jmp  exception  mechanism  can  be  im-plemented.   Consider  a  32-bit  computer  architecture  with  5  registers  (r0,  ...,r4):r0-2are used for function parameters,r3is used for the return address, andr4is used to storethe return value.  Implement set\_jmp(jmp\_buf*)and long\_jmp(jmp\_buf*, int)in assembly(AT\&T syntax).  Assume that the jmp\_buf is large enough, and that the second argument to long\_jmp is never 0.
+\begin{solutions}
+
+\end{solutions}
   \begin{enumerate}
-    \item  Modular, transform IR (Analysis passes just inspect IR)
-    \item Can be run multiple times, in di↵erent orders
-    \item May not always produce improvements when run in the wrong order!
-    \item Some intentionally pessimise code to make later passes work better
+    \item  Is it possible to longjmp to the same jmp\_buf multiple times?
+    \item  Write a program which throws an exception, handles it, and returns to the exceptionsite from the exception handler using set\_jmp/long\_jmp.
   \end{enumerate}
-  
-  \subsection{Register vs Stack IR}
-  \begin{enumerate}
-    \item Stack makes interpreting, naive compilation easier • Register makes various optimisations easier
-    \item Which ones?
-  \end{enumerate}
-  \begin{center}
-   \includegraphics[height=3cm]{img/Snipaste_2021-04-05_17-25-13.png}
-   \end{center}
-   
-  \begin{center}
-   \includegraphics[height=3cm]{img/Snipaste_2021-04-05_17-27-00.png}
-   \end{center}
+  \begin{solutions}
 
-\subsubsection{Problems with CSE and Stack IR}
+  \end{solutions}
 
+\subsection{Basic Optimization on IR}
+In GCC or optimization of Java code, we do some genuine optimization like const propogation, in LLVM IR, we literally do them in the IR. Here are the process to do so.
+
+\subsubsection{Mem2Reg}
+
+
+\subsubsection{SimplifyCFG}
+Performs dead code elimination and basic block merging. Specifically:
 \begin{enumerate}
-  \item Entire operation must happen at once (no incremental algorithm)
-  \item Finding identical subtrees is possible, reusing results is harder • If the operations were not adjacent, must spill to temporary
+  \item Removes basic blocks with no predecessors.
+  \item Merges a basic block into its predecessor if there is only one and the predecessor only has one successor.
+  \item Eliminates PHI nodes for basic blocks with a single predecessor.
+  \item Eliminates a basic block that only contains an unconditional branch.
 \end{enumerate}
 
-\subsubsection{Hierarchical vs Flat IR}
-\begin{enumerate}
-  \item Source code is hierarchical (contains structured flow control, scoped values)
-  \item Assembly is flat (all flow control is by jumps)
-  \item Intermediate representations are supposed to be somewhere
-  between the two
-  \item Think about the possible ways that a for loop, while loop, and if statement with a backwards goto might be represented.
-\end{enumerate}
+\begin{minted}[mathescape, linenos]{llvm}
+; NOTE: Assertions have been autogenerated by utils/update_test_checks.py
+; RUN: opt -instcombine -simplifycfg -S < %s 
 
-\subsubsection{Hierarchical IR}
-\begin{enumerate}
-\item  Easy to express high-level constructs
-\item Preserves program semantics
-\item Preserves high-level semantics (variable lifetime, exceptions) clearly
-\item Example: Ark Compiler, Flamming my compiler
-\end{enumerate}
-\subsection{Flat IR}
+target datalayout = "e-m:e-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-pc-linux-gnu"
 
-\begin{enumerate}
-  \item Easy to map to the back end
-  \item Simple for optimisations to process
-  \item Must carry scope information in ad-hoc ways (e.g. LLVM IR has intrinsics to explicitly manage lifetimes for stack allocations)
-  \item Examples: LLVM IR, CGIR, PTX
-\end{enumerate}
-\section{What Is LLVM IR?}
-\begin{enumerate}
-  \item Unlimited Single-Assignment Register machine instruction set • Strongly typed
-  \item Three common representations:
-  \item Human-readable LLVM assembly (.ll files)
-  \item Dense ‘bitcode’ binary representation (.bc files) • C++ classes
-\end{enumerate}
+; #include <limits>
+; #include <cstdint>
+;
+; using size_type = std::size_t;
+; bool will_not_overflow(size_type size, size_type nmemb) {
+;   return (size != 0 && (nmemb > std::numeric_limits<size_type>::max() / size));
+; }
 
-\subsection{Unlimited Register Machine?}
+define i1 @will_not_overflow(i64 %arg, i64 %arg1) {
+; SIMPLIFYCFG-LABEL: @will_not_overflow(
+;  bb:
+;    [[T0:%.*]] = icmp eq i64 [[ARG:%.*]], 0
+;    br i1 [[T0]], label [[BB5:%.*]], label [[BB2:%.*]]
+;  bb2:
+;    [[T3:%.*]] = udiv i64 -1, [[ARG]]
+;    [[T4:%.*]] = icmp ult i64 [[T3]], [[ARG1:%.*]]
+;    br label [[BB5]]
+;  bb5:
+;    [[T6:%.*]] = phi i1 [ false, [[BB:%.*]] ], [ [[T4]], [[BB2]] ]
+;    ret i1 [[T6]]
+;
+; INSTCOMBINEONLY-LABEL: @will_not_overflow(
+;  bb:
+;    [[T0:%.*]] = icmp eq i64 [[ARG:%.*]], 0
+;    br i1 [[T0]], label [[BB5:%.*]], label [[BB2:%.*]]
+;  bb2:
+;    [[UMUL:%.*]] = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 [[ARG]], i64 [[ARG1:%.*]])
+;    [[UMUL_OV:%.*]] = extractvalue { i64, i1 } [[UMUL]], 1
+;    br label [[BB5]]
+;  bb5:
+;    [[T6:%.*]] = phi i1 [ false, [[BB:%.*]] ], [ [[UMUL_OV]], [[BB2]] ]
+;    ret i1 [[T6]]
+;
+; INSTCOMBINESIMPLIFYCFGONLY-LABEL: @will_not_overflow(
+;  bb:
+;    [[T0:%.*]] = icmp eq i64 [[ARG:%.*]], 0
+;    [[UMUL:%.*]] = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 [[ARG]], i64 [[ARG1:%.*]])
+;    [[UMUL_OV:%.*]] = extractvalue { i64, i1 } [[UMUL]], 1
+;    [[T6:%.*]] = select i1 [[T0]], i1 false, i1 [[UMUL_OV]]
+;    ret i1 [[T6]]
+;
+; INSTCOMBINESIMPLIFYCFGINSTCOMBINE-LABEL: @will_not_overflow(
+;  bb:
+;    [[UMUL:%.*]] = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 [[ARG:%.*]], i64 [[ARG1:%.*]])
+;    [[UMUL_OV:%.*]] = extractvalue { i64, i1 } [[UMUL]], 1
+;    ret i1 [[UMUL_OV]]
+;
+; INSTCOMBINESIMPLIFYCFGCOSTLYONLY-LABEL: @will_not_overflow(
+;  bb:
+;    [[T0:%.*]] = icmp eq i64 [[ARG:%.*]], 0
+;    [[UMUL:%.*]] = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 [[ARG]], i64 [[ARG1:%.*]])
+;    [[UMUL_OV:%.*]] = extractvalue { i64, i1 } [[UMUL]], 1
+;    [[T6:%.*]] = select i1 [[T0]], i1 false, i1 [[UMUL_OV]]
+;    ret i1 [[T6]]
+;
+; INSTCOMBINESIMPLIFYCFGCOSTLYINSTCOMBINE-LABEL: @will_not_overflow(
+;  bb:
+;    [[UMUL:%.*]] = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 [[ARG:%.*]], i64 [[ARG1:%.*]])
+;    [[UMUL_OV:%.*]] = extractvalue { i64, i1 } [[UMUL]], 1
+;    ret i1 [[UMUL_OV]]
+;
+bb:
+  %t0 = icmp eq i64 %arg, 0
+  br i1 %t0, label %bb5, label %bb2
 
-\begin{enumerate}
-  \item  Real CPUs have a fixed number of registers
-  \item LLVM IR has an infinite number
-  \item New registers are created to hold the result of every instruction
-  \item CodeGen’s register allocator determines the mapping from LLVM registers to physical registers
-  \item Type legalisation maps LLVM types to machine types and so on (e.g. 128-element float vector to 32 SSE vectors or 16 AVX vectors, 1-bit integers to 32-bit values)
-\end{enumerate}
+bb2:                                              ; preds = %bb
+  %t3 = udiv i64 -1, %arg
+  %t4 = icmp ult i64 %t3, %arg1
+  br label %bb5
 
-\subsection{Static Single Assignment}
-\begin{enumerate}
-  \item Registers may be assigned to only once
-  \item Most (imperative) languages allow variables to be... variable
-  \item This requires some e↵ort to support in LLVM IR: SSA registers are not variables
-  \item SSA form makes dataflow explicit: All consumers of the result of an instruction read the output register(s)
-\end{enumerate}
+bb5:                                              ; preds = %bb2, %bb
+  %t6 = phi i1 [ false, %bb ], [ %t4, %bb2 ]
+  ret i1 %t6
+}
 
-\textbf{Example:}
+; Same as @will_not_overflow, but inverting return value.
 
-\begin{center}
-  \includegraphics[height=1.7cm]{img/Snipaste_2021-04-05_17-33-40.png}
-  \end{center}
-\begin{center}
-  \includegraphics[height=2.5cm]{img/Snipaste_2021-04-05_17-34-02.png}
-  \end{center}
-\begin{center}
-  \includegraphics[height=3cm]{img/Snipaste_2021-04-05_17-34-41.png}
-  \end{center}
-  
-  \subsection{Translating to LLVM IR The Easy Way}
-  \begin{center}
-    \includegraphics[height=3cm]{img/Snipaste_2021-04-05_17-35-19.png}
-    \end{center}
-    \begin{enumerate}
-      \item Numbered register are allocated automatically
-      \item  Each expression in the source is translated without worrying
-      about data flow
-      \item  Memory is not SSA in LLVM
-    \end{enumerate}
-    \subsubsection{Isn’t That Slow?}
-    \begin{center}
-      \includegraphics[height=6cm]{img/Snipaste_2021-04-05_17-37-34.png}
-      \end{center}
-\subsection{Sequences of Instructions}
-\begin{enumerate}
+define i1 @will_overflow(i64 %arg, i64 %arg1) {
+; SIMPLIFYCFG-LABEL: @will_overflow(
+;  bb:
+;    [[T0:%.*]] = icmp eq i64 [[ARG:%.*]], 0
+;    br i1 [[T0]], label [[BB5:%.*]], label [[BB2:%.*]]
+;  bb2:
+;    [[T3:%.*]] = udiv i64 -1, [[ARG]]
+;    [[T4:%.*]] = icmp ult i64 [[T3]], [[ARG1:%.*]]
+;    br label [[BB5]]
+;  bb5:
+;    [[T6:%.*]] = phi i1 [ false, [[BB:%.*]] ], [ [[T4]], [[BB2]] ]
+;    [[T7:%.*]] = xor i1 [[T6]], true
+;    ret i1 [[T7]]
+;
+; INSTCOMBINEONLY-LABEL: @will_overflow(
+;  bb:
+;    [[T0:%.*]] = icmp eq i64 [[ARG:%.*]], 0
+;    br i1 [[T0]], label [[BB5:%.*]], label [[BB2:%.*]]
+;  bb2:
+;    [[UMUL:%.*]] = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 [[ARG]], i64 [[ARG1:%.*]])
+;    [[UMUL_OV:%.*]] = extractvalue { i64, i1 } [[UMUL]], 1
+;    [[PHITMP:%.*]] = xor i1 [[UMUL_OV]], true
+;    br label [[BB5]]
+;  bb5:
+;    [[T6:%.*]] = phi i1 [ true, [[BB:%.*]] ], [ [[PHITMP]], [[BB2]] ]
+;    ret i1 [[T6]]
+;
+; INSTCOMBINESIMPLIFYCFGONLY-LABEL: @will_overflow(
+;  bb:
+;    [[T0:%.*]] = icmp eq i64 [[ARG:%.*]], 0
+;    [[UMUL:%.*]] = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 [[ARG]], i64 [[ARG1:%.*]])
+;    [[UMUL_OV:%.*]] = extractvalue { i64, i1 } [[UMUL]], 1
+;    [[PHITMP:%.*]] = xor i1 [[UMUL_OV]], true
+;    [[T6:%.*]] = select i1 [[T0]], i1 true, i1 [[PHITMP]]
+;    ret i1 [[T6]]
+;
+; INSTCOMBINESIMPLIFYCFGINSTCOMBINE-LABEL: @will_overflow(
+;  bb:
+;    [[UMUL:%.*]] = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 [[ARG:%.*]], i64 [[ARG1:%.*]])
+;    [[UMUL_OV:%.*]] = extractvalue { i64, i1 } [[UMUL]], 1
+;    [[PHITMP:%.*]] = xor i1 [[UMUL_OV]], true
+;    ret i1 [[PHITMP]]
+;
+; INSTCOMBINESIMPLIFYCFGCOSTLYONLY-LABEL: @will_overflow(
+;  bb:
+;    [[T0:%.*]] = icmp eq i64 [[ARG:%.*]], 0
+;    [[UMUL:%.*]] = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 [[ARG]], i64 [[ARG1:%.*]])
+;    [[UMUL_OV:%.*]] = extractvalue { i64, i1 } [[UMUL]], 1
+;    [[PHITMP:%.*]] = xor i1 [[UMUL_OV]], true
+;    [[T6:%.*]] = select i1 [[T0]], i1 true, i1 [[PHITMP]]
+;    ret i1 [[T6]]
+;
+; INSTCOMBINESIMPLIFYCFGCOSTLYINSTCOMBINE-LABEL: @will_overflow(
+;  bb:
+;    [[UMUL:%.*]] = call { i64, i1 } @llvm.umul.with.overflow.i64(i64 [[ARG:%.*]], i64 [[ARG1:%.*]])
+;    [[UMUL_OV:%.*]] = extractvalue { i64, i1 } [[UMUL]], 1
+;    [[PHITMP:%.*]] = xor i1 [[UMUL_OV]], true
+;    ret i1 [[PHITMP]]
+;
+bb:
+  %t0 = icmp eq i64 %arg, 0
+  br i1 %t0, label %bb5, label %bb2
 
-  \item A sequence of instructions that execute in order is a basic block
-  \item Basic blocks must end with a terminator
-  \item Terminators are intraprocedural flow control instructions.
-  \item call is not a terminator because execution resumes at the same place after the call
-  \item invoke is a terminator because flow either continues or branches to an exception cleanup handler
-  \item This means that even “zero-cost” exceptions can have a cost: they complicate the control-flow graph (CFG) within a function and make optimisation harder.
-\end{enumerate}
-\subsection{Intraprocedural Flow Control}
-\begin{enumerate}
-  \item Assembly languages typically manage flow control via jumps / branches (often the same instructions for inter- and intraprocedural flow)
-  \item LLVM IR has conditional and unconditional branches
-  \item Branch instructions are terminators (they go at the end of a
-  basic block)
-  \item Basic blocks are branch targets
-  \item You can’t jump into the middle of a basic block (by the definition of a basic block)
-\end{enumerate}
+bb2:                                              ; preds = %bb
+  %t3 = udiv i64 -1, %arg
+  %t4 = icmp ult i64 %t3, %arg1
+  br label %bb5
 
-\subsection{‘Phi, my lord, phi!’ - Lady Macbeth, Compiler Developer}
+bb5:                                              ; preds = %bb2, %bb
+  %t6 = phi i1 [ false, %bb ], [ %t4, %bb2 ]
+  %t7 = xor i1 %t6, true
+  ret i1 %t7
+}
+\end{minted}
 
-\begin{enumerate}
-  \item  $\phi$ nodes are special instructions used in SSA construction
-  \item Their value is determined by the preceding basic block
-  \item $\phi$ nodes must come before any non- $\phi$ instructions in a basic
-  block
-  \item In code generation, $\phi$ nodes become a requirement for one
-  basic block to leave a value in a specific register.
-  Alternate representation: named parameters to basic blocks
-\end{enumerate}
-\begin{center}
-  \includegraphics[height=6cm]{img/Snipaste_2021-04-05_17-40-27.png}
-  \end{center}
-  \subsection{Why Select?}
-  \begin{center}
-    \includegraphics[height=6cm]{img/Snipaste_2021-04-05_17-41-52.png}
-    \end{center}
-    
-    \subsection{Functions}
-    \begin{center}
-      \includegraphics[height=6cm]{img/Snipaste_2021-04-05_17-42-34.png}
-      \end{center}
-\subsection{The Most Important LLVM Classes}
-
-\begin{enumerate}
-  \item Module - A compilation unit.
-  \item Function - Can you guess?
-  \item BasicBlock - a basic block
-  \item GlobalVariable (I hope it’s obvious)
-  \item IRBuilder - a helper for creating IR
-  \item Type - superclass for all LLVM concrete types
-  \item ConstantExpr - superclass for all constant expressions
-  \item PassManagerBuilder - Constructs optimisation pass sequences to run
-  \item ExecutionEngine - Interface to the JIT compiler
-   
-\end{enumerate}
-
-\subsection{Writing A Simple Pass}
-\begin{enumerate}
-  \item Memoise an expensive library call
-  \item Call maps a string to an integer (e.g. string intern function) • Mapping can be expensive.
-  \item Always returns the same result.
-\end{enumerate}
-
-\subsection{Selection DAG}
-\begin{enumerate}
-  \item DAG defining operations and dependencies
-  \item Legalisation phase lowers IR types to target types
-  \begin{enumerate}
-  \item Arbitrary-sized vectors to fixed-size
-  \item Float to integer and softfloat library calls 
-  \end{enumerate}
-  
-  \item DAG-to-DAG transforms simplify structure
-  \item Code is still (more or less) architecture independent at this
-  point
-  \item Some peephole optimisations happen here
-\end{enumerate}
-
-\begin{center}
-  \includegraphics[height=12cm]{img/Snipaste_2021-04-05_17-45-22.png}
-  \end{center}
+\printbibliography
 \end{document}
