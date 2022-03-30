@@ -34,7 +34,7 @@
 
 \AtBeginDocument{\xpatchcmd{\@thm}{\thm@headpunct{.}}{\thm@headpunct{}}{}{}}
 \makeatother
-
+\noprintanswers
 \pagestyle{fancy}
 \renewcommand{\baselinestretch}{1.15}
 
@@ -60,7 +60,7 @@
 \section{Object Oriented Programming}
 Recall the $stub$ trick from the lecture, an implementation strategy for multiple inheritance is listed as following:
 
-\begin{verbatim}
+\begin{minted}[mathescape, linenos]{c++}
 class Base {
   public:
     int foo;
@@ -87,27 +87,106 @@ class Derived : public Base, public Base2 {
        return this->baz;
      }
 };
-\end{verbatim}
+\end{minted}
 
 To overcome this issue, compilers will move the this pointer so that each method sees what it expects. For simplicity, they actually create stub methods that will move the this pointer before calling the original method. For example, the compiler may generate
 
-\begin{verbatim}
+\begin{minted}[mathescape, linenos]{c++}
   Base2::g’() { move_this_pointer(); g(); }
-\end{verbatim}
+\end{minted}
 
 \begin{enumerate}
-  \item Roughly sketch the class layout of the above classes (using the same 4-byte offset convention  from  the  inheritance  lecture).   ForDerived,  assumeh()is  storedinside its own version ofBase’s vtable.
-  \item What will the following print (assuming there is no padding)?
-        \begin{verbatim}
+  \item Roughly sketch the class layout of the above classes (using the same 4-byte offset convention from the inheritance lecture). For Derived, \texttt{assumeh()} is stored inside its own version of Base’s vtable.
+  \begin{solution}
+\begin{verbatim}
+0 | (Base vtable pointer; vtable contains f())
+4 | int foo
+
+0 | (Base2 vtable pointer; vtable contains g())
+4 | int bar
+
+0 | (Base vtable pointer; vtable contains f(), h(), and g'(); 
+    g'() is a stub that increments this by 8, then calls g())
+4 | int bar
+8 | (Base2 vtable pointer; vtable contains g())
+12| int bar
+16| int baz
+\end{verbatim}
+  \end{solution}
+ \item What will the following print (assuming there is no padding)?
+\begin{minted}[mathescape, linenos]{c++}
     Derived a;
     std::cout << &a << std::endl; // Suppose this prints 0x10
     a.f();
     a.g();
     a.h();
-  \end{verbatim}
+\end{minted}
+\begin{solution}
+\begin{verbatim}
+0x10
+0x18
+0x10
+\end{verbatim}
+\end{solution}
 \end{enumerate}
-\subsubsection{C++ OOP implementation in LLVM IR}
+\subsubsection{C++ OOP implementation in LLVM IR\cite{llvmcpp}}
+A class is nothing more than a structure with an associated set of functions that take an implicit first parameter, namely a pointer to the structure. Therefore, is is very trivial to map a class to LLVM IR:
+\begin{minted}[mathescape, linenos]{c++}
+#include<stddef.h>
+class Foo {
+public:
+  Foo() {
+      length = 0;
+  }
 
+  size_t GetLength() const {
+      return length;
+  }
+
+  void SetLength(size_t value) {
+      length = value;
+  }
+
+private:
+    size_t length;
+};
+\end{minted}
+We first transform this code into two separate pieces:
+\begin{enumerate}
+ \item The structure definition.
+ \item The list of methods, including the constructor.
+\end{enumerate}
+\begin{minted}[mathescape, linenos]{llvm}
+; The structure definition for class Foo.
+%Foo = type { i32 }
+
+; The default constructor for class Foo.
+define void @Foo_Create_Default(%Foo* %this) nounwind {
+    %1 = getelementptr %Foo, %Foo* %this, i32 0, i32 0
+    store i32 0, i32* %1
+    ret void
+}
+
+; The Foo::GetLength() method.
+define i32 @Foo_GetLength(%Foo* %this) nounwind {
+    %1 = getelementptr %Foo, %Foo* %this, i32 0, i32 0
+    %2 = load i32, i32* %1
+    ret i32 %2
+}
+
+; The Foo::SetLength() method.
+define void @Foo_SetLength(%Foo* %this, i32 %value) nounwind {
+    %1 = getelementptr %Foo, %Foo* %this, i32 0, i32 0
+    store i32 %value, i32* %1
+    ret void
+}
+\end{minted}
+Whenever an instance is created.
+\begin{minted}[mathescape, linenos]{c}
+Foo foo;
+%foo = alloca %Foo
+call void @Foo_Create_Default(%Foo* %foo)
+\end{minted}
 \subsubsection{ChocoPy OOP Mapping on Light IR}
 Here's an example of OOP in ChocoPy
 \begin{minted}[mathescape, linenos]{python}
@@ -159,26 +238,166 @@ $C$dispatchTable:
 \end{minted}
 
 \subsection{Exceptions and Code Generation}
-In  this  question  we’ll  look  at  how  the  set\_jmp/long\_jmp  exception  mechanism  can  be  im-plemented.   Consider  a  32-bit  computer  architecture  with  5  registers  (r0,  ...,r4):r0-2are used for function parameters,r3is used for the return address, andr4is used to storethe return value.  Implement set\_jmp(jmp\_buf*)and long\_jmp(jmp\_buf*, int)in assembly(AT\&T syntax).  Assume that the jmp\_buf is large enough, and that the second argument to long\_jmp is never 0.
-\begin{solutions}
-
-\end{solutions}
+In this question we’ll look at how the \texttt{set\_jmp}/\texttt{long\_jmp} exception mechanism can be im-plemented. Consider a 32-bit computer architecture with 5 registers \texttt{(r0, ...,r4):r0-2} are used for function parameters,r3is used for the return address, and r4 is used to store the return value.  Implement \texttt{set\_jmp(jmp\_buf*)} and \texttt{long\_jmp(jmp\_buf*, int)} in assembly(AT\&T syntax).  Assume that the \texttt{jmp\_buf} is large enough, and that the second argument to \texttt{long\_jmp} is never 0. \cite{ljsj}
+\begin{solution}
+\begin{verbatim}
+setjmp:
+  movl r0, 0(r0) ; Hint: setjmp() cannot modify any registers until
+  movl r1, 4(r0) ; it has saved them
+  movl r2, 8(r0) ;
+  movl r3,12(r0) ;
+  xorl r4, r4    ; Set the return value register to 0.
+  retl ; Return to the address stored in r3.
+longjmp:
+  movl r1, r4    ; Set the return value up front before r1 disappears.
+  movl 4(r0), r1 ; Skip recovering r0 to preserve the jmp_buf pointer.
+  movl 8(r0), r2 ; 
+  movl 12(r0), r3; Recover the return address passed into setjmp().
+  movl O(r0), r0 ; Finally, recover r0. We handled the others already.
+  retl ; Return "again" from setjmp() by iumping to (r3).
+\end{verbatim}
+\end{solution}
+\begin{minted}[mathescape, linenos]{c}
+// A simple C program to demonstrate working of setjmp() and longjmp()
+#include<stdio.h>
+#include<setjmp.h>
+jmp_buf buf;
+void func() {
+    printf("Welcome to GeeksforGeeks\n");
+    // Jump to the point setup by setjmp
+    longjmp(buf, 1);
+    printf("Geek2\n");
+}
+int main() {
+    // Setup jump position using buf and return 0
+    if (setjmp(buf))
+        printf("Geek3\n");
+    else {
+        printf("Geek4\n");
+        func();
+    }
+    return 0;
+}
+\end{minted}
+Compared 
   \begin{enumerate}
-    \item  Is it possible to longjmp to the same jmp\_buf multiple times?
-    \item  Write a program which throws an exception, handles it, and returns to the exceptionsite from the exception handler using set\_jmp/long\_jmp.
+    \item  Is it possible to longjmp to the same \texttt{jmp\_buf} multiple times?
+    \begin{solution}
+      Yes.
+    \end{solution}
+    \item  Write a program which throws an exception, handles it, and returns to the exception site from the exception handler using \texttt{set\_jmp}/\texttt{long\_jmp}.
+    \begin{solution}
+\begin{minted}[mathescape, linenos]{c}
+void f() {
+  jmp_buf jb1, jb2;
+  if (setjmp(&jb1)==0){
+    if (setjmp(&jb2)=0){
+       longjmp (&jb1, 1);
+  } else {
+       // return to exception site
+    }
+  } else {
+    longjmp (&jb2, 2);
+  }
+}
+\end{minted}
+    \end{solution}
   \end{enumerate}
-  \begin{solutions}
-
-  \end{solutions}
 
 \subsection{Basic Optimization on IR}
 In GCC or optimization of Java code, we do some genuine optimization like const propogation, in LLVM IR, we literally do them in the IR. Here are the process to do so.
 
-\subsubsection{Mem2Reg}
+\subsubsection{Function inline}
+There's some of the parameter useful for the inline.
+\begin{minted}[mathescape, linenos]{c++}
+class FunctionInline : public Transform {
+public:
+  const bool ONLY_INLINE_SMALL_FUNC = false;
+  const bool INLINE_BB_NUM_MAX = 4;
+  const bool NOT_INLINE_MULTILEVEL_LOOP_FUNC = true;
+  const int INLINE_LOOP_LEVEL_MAX = 1;
+  const bool INLINE_RECURSIVE = false;
+//...
+}
+\end{minted}
+The Function Inline requires to check whether there's recursive calls inside and during the calls to the function.
+\subsubsection{Constant propagation}
+
+First is the constant fold utility function, which has three ranges of constant folding
+\begin{enumerate}
+    \item For binary arithmetic or logical operations, a new constant is created with the value of the result instead of two operands and an operator ADD SUB MUL DIV REM, ADD OR
+\item For unary arithmetic or logical operations, a new constant is created with the result value instead of one operand and one operator (negative and positive)NEG NOT
+\item For binary comparison operations, use 0 or 1 to represent the truth or falsity of the logic EQ NE GT LT GE LE
+\end{enumerate}
+\subsubsection{Dominator Tree \cite{cs153lec23}}
+\begin{enumerate}
+\item Definition
+$$ \text{DOM}(n)={n} \cup\left ( \mathop{\cap}\limits_{m \in preds(n)} \text{DOM}(m) \right) $$
+
+The data flow equation is easy to understand, the node that dominates n is the concatenation of n and the node that dominates m, where m is the predecessor of n
+
+Thus, before the current node (BasicBlock) is evaluated, all the predecessor nodes of the current node (Prev Basic Block) should be evaluated in this iteration, otherwise it will be put to the next iteration to update the value, which will add an iterative process.
+
+To solve the iterative data flow analysis problem, for the forward data flow: the valuation process can be properly ordered so that the algorithm can converge after few iterations. Reverse Post Order can save the number of iterations
+
+\item What is Reverse Post Order
+
+A postorder traversal visits as many of a node’s children as possible, in a consistent order, before visiting the node. (In a cyclic graph, a node’s child may also be its ancestor).
+
+An reverse postorder(RPO) traversal is the opposite - it visits as many of a node’s predecessors as possible before visiting the node itself.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=5cm]{./figure0.png}
+\end{figure}
+
+If we can arrange B5, B6, B8, B7 to be evaluated before B3, we can get more "global" information, i.e., all precursors of B3.
+
+This way we can reduce the number of iterations from 3 to 2
+
+So we need to depth first traverse the entire CFG in reverse post-order \cite{cooper2001simple}
+\begin{minted}[mathescape, linenos]{c++}
+void Dominators::createReversePostOrder(Function *f) {  // 逆后序
+  reversePostOrder_.clear();
+  postOrderID_.clear();
+  std::set<BasicBlock *> visited;
+  postOrderVisit(f->getEntryBlock(), visited);
+  reversePostOrder_.reverse();
+}
+
+// data structure
+class Dominators:{
+private:
+  std::list<BasicBlock *> reversePostOrder_;
+  std::map<BasicBlock *, int> postOrderID_; // the root has highest ID
+};
+
+void Dominators::postOrderVisit(BasicBlock *bb, std::set<BasicBlock *> &visited) {
+  //从bb开始一趟深度优先遍历
+  visited.insert(bb);
+  for (auto b : bb->getSuccBasicBlocks()) {
+    if (visited.find(b) == visited.end())  // 如果未访问过
+      postOrderVisit(b, visited);
+  }
+  // 节点的后继都访问完毕时
+  // 对子节点从深到浅编号
+  postOrderID_[bb] = reversePostOrder_.size();
+  reversePostOrder_.push_back(bb);
+}
+\end{minted}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=5cm]{./figure2.png}
+\end{figure}
+\end{enumerate}
+\subsubsection{InsertPhi}
+When generating SSA, it is necessary to calculate where to insert the correct $\phi$. All Basic Blocks with multiple precursors may need to have $\phi$ inserted at the beginning, but this method will insert a lot of useless $\phi$, in order to reduce unnecessary overhead, which BB's need to be inserted at the beginning
+
+For example, in the CFG diagram above, the definition of the variable at B2 does not govern the use of that variable at B3, so the phi instruction needs to be inserted
 
 
 \subsubsection{SimplifyCFG}
 Performs dead code elimination and basic block merging. Specifically:
+
 \begin{enumerate}
   \item Removes basic blocks with no predecessors.
   \item Merges a basic block into its predecessor if there is only one and the predecessor only has one successor.

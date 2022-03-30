@@ -20,7 +20,7 @@
 \usepackage{tikz}
 \usepackage{multicol,comment}
 \usepackage{biblatex}
-\addbibresource{04-discussion.bib}
+\addbibresource{05-discussion.bib}
 \usepackage{tikz}
 
 \usetikzlibrary{automata,positioning}
@@ -373,7 +373,113 @@ entry:
 }
 \end{minted}
 \subsection{Functions in Light IR}
-
+The Function is defined as
+\begin{minted}[mathescape, linenos]{c++}
+class Function : public Value {
+  public:
+      Function(FunctionType *ty, const string &name, Module *parent);
+      ~Function() = default;
+  
+      static Function *create(FunctionType *ty, const string &name, Module *parent);
+      static Function *create(bool is_ctor, FunctionType *ty, const string &name, Module *parent);
+  
+      FunctionType *get_function_type() const;
+  
+      Type *get_return_type() const;
+  
+      void add_basic_block(BasicBlock *bb);
+  
+      unsigned get_num_of_args() const;
+      unsigned get_num_basic_blocks() const;
+  
+      Module *get_parent() const;
+  
+      list<Argument *>::iterator arg_begin() { return arguments_.begin(); }
+      list<Argument *>::iterator arg_end() { return arguments_.end(); }
+  
+      void remove(BasicBlock *bb);
+      BasicBlock *get_entry_block() { return *basic_blocks_.begin(); }
+  
+      list<BasicBlock *> &get_basic_blocks() { return basic_blocks_; }
+      list<Argument *> &get_args() { return arguments_; }
+  
+      bool is_declaration() { return basic_blocks_.empty(); }
+  
+      void set_instr_name();
+      string print() override;
+      string print_method(Class *method_);
+      string print_args();
+      bool is_ctor = false;
+  
+  private:
+      void build_args();
+  
+  private:
+      list<BasicBlock *> basic_blocks_; /* basic blocks */
+      list<Argument *> arguments_; /* arguments */
+      Module *parent_;
+      unsigned seq_cnt_;
+  };
+\end{minted}
+First, define a function using \texttt{FuncDef} visitor pattern, and then add it to the scope finder. Just call using \texttt{builder->create\_call()} to the found previously defined function.
+\begin{minted}[mathescape, linenos]{llvm}
+define void @$crunch(%$.list$prototype_type* %arg0) {
+ 
+ label1:
+   %op2 = alloca i32
+   %op3 = alloca %$class.anon_make_z, align 4
+   %op4 = getelementptr %$class.anon_make_z, %$class.anon_make_z* %op3, i32 0, i32 0
+   store i32* %op2, i32** %op4
+   %op5 = getelementptr %$class.anon_make_z, %$class.anon_make_z* %op3, i32 0, i32 1
+   store %$.list$prototype_type* %arg0, %$.list$prototype_type** %op5
+   call void @$crunch.make_z(%$class.anon_make_z* %op3)
+   %op6 = load i32, i32*@x
+   br label %label7
+   
+ label7:                                                ; preds = %label1, %label13
+   %op8 = phi i32 [ %op6, %label1 ], [ %op11, %label13 ]
+   %op9 = icmp ne i32 %op6, %op8
+   %op10 = getelementptr i32, i32* %op2, i32 %op8
+   %op11 = add i32 %op8, 1
+   %op12 = load i32, i32* %op10
+   br label %label13
+   
+   label13:                                                ; preds = %label7
+     br  i1 %op9, label %label7, label %label14
+     
+   label14:                                                ; preds = %label13
+     ret void
+}
+define void @$crunch.make_z(%$class.anon_make_z* %arg0) {
+     
+   label1:
+     %op2 = getelementptr %$class.anon_make_z, %$class.anon_make_z* %arg0, i32 0, i32 0
+     %op3 = getelementptr %$class.anon_make_z, %$class.anon_make_z* %arg0, i32 0, i32 1
+     %op4 = load %$.list$prototype_type*, %$.list$prototype_type** %op3
+     %op5 = alloca i32
+     store i32 0, i32* %op5
+     %op6 = bitcast %$.list$prototype_type* %op4 to %$union.len*
+     %op7 = call i32 @$len(%$union.len* %op6)
+     br label %label8
+     
+   label8:                                                ; preds = %label1, %label17
+     %op9 = phi i32 [ %op7, %label1 ], [ %op12, %label17 ]
+     %op10 = icmp ne i32 %op7, %op9
+     %op11 = getelementptr %$.list$prototype_type, %$.list$prototype_type* %op4, i32 0, i32 4
+     %op12 = add i32 %op9, 1
+     %op13 = load %$union.conslist*, %$union.conslist** %op11
+     %op14 = bitcast %$union.conslist* %op13 to i32*
+     %op15 = getelementptr i32, i32* %op14, i32 %op9
+     %op16 = load i32, i32* %op15
+     br label %label17
+     
+   label17:                                                ; preds = %label8
+     br  i1 %op10, label %label8, label %label18
+     
+   label18:                                                ; preds = %label17
+     ret void
+}
+\end{minted}
 
 \subsection{The Most Important LLVM Classes}
 
@@ -416,7 +522,5 @@ entry:
   \includegraphics[height=12cm]{img/Snipaste_2021-04-05_17-45-22.png}
 \end{center}
 
-
-\end{document}
 \printbibliography
 \end{document}
