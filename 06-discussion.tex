@@ -370,7 +370,7 @@ A postorder traversal visits as many of a node’s children as possible, in a co
 An reverse postorder(RPO) traversal is the opposite - it visits as many of a node’s predecessors as possible before visiting the node itself.
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=5cm]{./figure0.png}
+  \includegraphics[width=5cm]{./img/figure0.png}
 \end{figure}
 
 If we can arrange B5, B6, B8, B7 to be evaluated before B3, we can get more "global" information, i.e., all precursors of B3.
@@ -409,7 +409,7 @@ void Dominators::postOrderVisit(BasicBlock *bb, std::set<BasicBlock *> &visited)
 \end{minted}
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=5cm]{./figure2.png}
+  \includegraphics[width=5cm]{./img/figure2.png}
 \end{figure}
 \end{enumerate}
 \subsubsection{InsertPhi}

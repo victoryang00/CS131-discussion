@@ -64,7 +64,7 @@ An Intermediate Representation (IR) is an intermediate (neither source nor targe
   \item Section
         \begin{enumerate}
           \item \textbf{Abstract Syntax Trees} (AST): a simplified Parse Tree.\\
-                \includegraphics[width=10cm]{img/Snipaste_2021-04-19_07-08-30.png}
+                \includegraphics[width=10cm]{img/ast.png}
                 \begin{itemize}
                   \item + close to source compactdesc
                   \item + suitable for source-source translation
@@ -76,7 +76,7 @@ An Intermediate Representation (IR) is an intermediate (neither source nor targe
           \item \textbf{Directed Acyclic Graphs} (DAG): DAG is an optimized AST, with identical nodes \textit{shared}.\\
                 \begin{figure}[htbp]
                   \centering
-                  \includegraphics[width=6cm]{img/Snipaste_2021-04-19_07-11-03.png}
+                  \includegraphics[width=6cm]{img/dag.png}
                 \end{figure}
                 \begin{itemize}
                   \item + Explicit sharing
@@ -97,7 +97,7 @@ An Intermediate Representation (IR) is an intermediate (neither source nor targe
                 \end{itemize}
                 \begin{figure}[htbp]
                   \centering
-                  \includegraphics[width=6cm]{img/Snipaste_2021-04-19_07-14-56.png}
+                  \includegraphics[width=6cm]{img/if_cfg_bb.png}
                 \end{figure}
                 \begin{itemize}
                   \item + Most widely used form. Can cast static analysis\cite{njuswanalysis} on it.
@@ -105,12 +105,12 @@ An Intermediate Representation (IR) is an intermediate (neither source nor targe
           \item \textbf{Single Static Assignment} (SSA): SSA means every variable will only be assigned value ONCE (therefore single). Useful for various kinds of optimizations.\\
                 \begin{figure}[htbp]
                   \centering
-                  \includegraphics[width=6cm]{img/Snipaste_2021-04-19_17-49-29.png}
+                  \includegraphics[width=6cm]{img/ssa_rename.png}
                 \end{figure}
                 A $\phi$ -function generates an extra assignment to "choose" from Branches or Loops. If Basic Block $B$ has Predecessors $P_{1}, \ldots, P_{n}$, then $X=\phi\left(v_{1}, \ldots, v_{n}\right)$ assigns $X=v_{j}$ if control enters $B$ from $P_{j}$.\\
                 \begin{figure}[htbp]
                   \centering
-                  \includegraphics[width=6cm]{img/Snipaste_2021-04-19_17-50-16.png}
+                  \includegraphics[width=6cm]{img/insert_phi.png}
                 \end{figure}
                 \begin{enumerate}
                   \item $\phi$ is not an executable operation
@@ -133,7 +133,7 @@ An Intermediate Representation (IR) is an intermediate (neither source nor targe
 \end{enumerate}
 
 \begin{center}
-  \includegraphics[height=3cm]{img/Snipaste_2021-04-05_17-18-11.png}
+  \includegraphics[height=3cm]{img/llvm.png}
 \end{center}
 
 As with any other piece of software using libraries simplifies development.
@@ -159,7 +159,7 @@ As with any other piece of software using libraries simplifies development.
 
   \begin{figure}[h]
     \centering
-    \includegraphics[height=3cm]{img/Snipaste_2021-04-05_17-27-00.png}
+    \includegraphics[height=3cm]{img/source_example.png}
     \caption{Stack IR}
   \end{figure}
 \subsubsection{Problems with CSE and Stack IR}
@@ -346,7 +346,7 @@ This file promotes memory references to be register references. It promotes allo
         Alternate representation: named parameters to basic blocks
 \end{enumerate}
 \begin{center}
-  \includegraphics[height=6cm]{img/Snipaste_2021-04-05_17-40-27.png}
+  \includegraphics[height=6cm]{img/llvm_compiled_cfg.png}
 \end{center}
 
 \subsubsection{Phi Func Insertion}
@@ -354,7 +354,7 @@ This file promotes memory references to be register references. It promotes allo
 \subsection{Why Select?}
 We have to select which machine instruction to generate, different ISAs have different memory models. Also, for the best performance, we have to make instruction scheduling and selection.
 \begin{center}
-  \includegraphics[width=6cm]{img/Snipaste_2021-04-05_17-41-52.png}
+  \includegraphics[width=6cm]{img/llvm_arch_diff.png}
 \end{center}
 
 \subsection{Functions}
@@ -519,7 +519,7 @@ define void @$crunch.make_z(%$class.anon_make_z* %arg0) {
 \end{enumerate}
 
 \begin{center}
-  \includegraphics[height=12cm]{img/Snipaste_2021-04-05_17-45-22.png}
+  \includegraphics[height=12cm]{img/llvm_peephole.png}
 \end{center}
 
 \printbibliography

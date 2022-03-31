@@ -58,7 +58,83 @@
 \begin{document}
 \maketitle
 \section{Operational Semantics}
+Operational Semantics are optional in defining a language codegen. But the formal definition of the code is to make the code easy to understand and reduce ambiguity. \textbf{Formal Semantics} are unambiguous abstractions of how the program is executed on a machine. They guide the implementation of Code Generators
 
+One kind of Formal Semantics is Operational Semantics (操作语义), where we use Operational Rules to demonstrate the effect of every possible operation. Similar to Type Systems, these rules are in the form of Rules of Inference, but different Contexts are needed, and the thing we infer is Value $v$ instead of Type $T$, along with a new Store.
+
+\begin{enumerate}
+    \item  Environment $E: E(x)=l_{x}$ tells the address (location) in memory where $x^{\prime}$ s value is stored
+    \begin{enumerate}
+        \item e.g. $E=\left[x: l_{x}, y: l_{y}\right]$
+        \item Will never change after an operation
+    \end{enumerate}
+\item Store $S: S\left(l_{x}\right)=v$ tells the value stored in location $l_{x}$
+\begin{enumerate}
+    \item e.g. $S=\left[l_{x}: 2, l_{y}: 0\right]$
+    \item $S\left[v / l_{x}\right]$ means to update $S$ by adding information $S\left(l_{x}\right)=v$
+     
+     Needed for let / case expressions, since they introduce new variables in new sub-scopes
+     \item A Rule may have side effects: change the Store
+\end{enumerate}
+\item Self-object so: current self object, needed for inferring self
+\begin{enumerate}
+\item Will never change after an operation
+\end{enumerate}
+
+\end{enumerate}
+\subsection{COOL Operational Semantics}
+Specially for COOL, where everything are Objects, we denote a value as $v=T\left(a_{1}=l_{1}, \ldots, a_{n}=l_{n}\right)$
+\begin{enumerate}
+    \item - $T$ is the Dynamic Type of value $v$
+\item $a_{i}$ is the $i$ th Attribute, where the location of $a_{i}$ 's value is $l_{i}$
+\item Special notations for basic classes:
+\begin{enumerate}
+    \item $\operatorname{Int}(5)$ : integer value 5
+\item $\operatorname{Bool}($ true): boolean value true
+\item $\operatorname{String}(4$, "Cool" $)$ : string "Cool" with length 4
+\item void: special instance of all types, only effective for isvoid
+\end{enumerate}
+\end{enumerate}
+Several additional rules are introduced for new objects and method dispatches:
+
+\subsection{ChocoPy Operational Semantics}
+
+\subsection{C++ Variable Length Array Operational Semantics}
+The C programming language\cite{openstd} includes variable-length arrays(VLA) \cite{makinglessdangerous}, a feature where we can allocate an auto array (on stack) of variable size, which was used widely in the Linux Kernel for resource allocation. But because of the tedious translation into the machine code and possible security issue, the recent kernel is VLA-free and C++ is partially abandon it. Therefore, the compiler shall do the semantic check for unacceptable following statements. Extend the typing semantics can be found at C manual 8.1.2 Function calls\cite{cfuncall} and C++ semantics page 7\cite{cs230lec06}, so that the following C++ code will emit a semantic error.
+\begin{minted}[mathescape, linenos]{c++}
+template<class T>class array{ 
+  int s;
+  T* elements; 
+public:
+  array(int n); // allocate "n" elements and let "elements" refer to them 
+  array(T* p, int n); // make this array refer to p[0..n-1]
+  operator T*(){return elements;}
+  int size()const{return s;} 
+  // the usual container operations, such as = and [], much like vector 
+};
+
+void h(array<double>a); //C++
+void g(int m,double vla[m]); //C99
+void f(int m,double vla1[m],array<double>a1) {
+    array<double> a2(vla1,m); // a2 refers to vla1 
+    double*p=a1; //p refers to a1's elements
+
+    g(m,vla1);
+    g(a1.size(),a1); // a bit verbose 
+    g(a1); //???
+}
+\end{minted}
+The calls marked with ? ? ? cannot be written in C++. Had they gotten past the type checking, the result would have executed correctly because of structural equivalence. If we somehow accept these calls, by a general mechanism or by a special rule for array and VLAs, arrays and VLAs would be completely interchangeable and a programmer could choose whichever style best suited taste and application.
+\subsubsection{}
+
+\section{Runtime System}
+The \textbf{Runtime System (Environment)} defines the way of managing run-time resources. It depends largely on the machine architecture and OS.
+
+
+\section{More on Optimization Passes}
+\subsection{Vectorization}
+
+\subsection{Multithread}
 
 \printbibliography
 \end{document}

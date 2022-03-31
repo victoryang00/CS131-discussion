@@ -54,7 +54,7 @@
   \usepackage[scaled=0.85]{FiraMono}
   
   \lstset{basicstyle=\ttfamily, keywordstyle=\bfseries}
-\title{CS 131 Compilers: Discussion 11: Garbage Collector and Codegen From Light IR}
+\title{CS 131 Compilers: Discussion 11: Garbage Collector, Trait vs. Concept and Codegen From Light IR}
 \author{\textbf{杨易为}~~\textbf{吴凌云}~~\textbf{樊雨鑫} \\ \texttt{ \{yangyw,wuly2,fanyx\}@shanghaitech.edu.cn}}
 
 
@@ -212,7 +212,7 @@ Use $std::unique\_ptr$ for exclusive-ownership resource management.
   class RealEstate:
     public Investment { … };
 \end{lstlisting} 
-\includegraphics[width=10cm]{img/Snipaste_2021-05-26_14-20-43.png}
+\includegraphics[width=10cm]{img/oop.png}
 
 A factory function for such a hierarchy typically allocates an object on the heap and returns a pointer to it, with the caller being responsible for deleting the object when it’s no longer needed. That’s a perfect match for std::unique\_ptr, because the caller acquires responsibility for the resource returned by the factory (i.e., exclusive ownership of it), and the std::unique\_ptr automatically deletes what it points to when the std::unique\_ptr is destroyed. A factory function for the Investment hierarchy could be declared like this:
 
@@ -267,13 +267,13 @@ std::unique_ptr<                        // deleter type is
 std::shared_ptr<Widget>                 // deleter type is not
  spw(new Widget, loggingDel);          // part of ptr type
 \end{lstlisting}
-\includegraphics[width=10cm]{img/Snipaste_2021-05-26_14-26-09.png}
+\includegraphics[width=10cm]{img/shared_ptr.png}
 
 \subsubsection{Use std::weak\_ptr for std::shared\_ptr-like pointers that can dangle.}
 
 As a final example of std::weak\_ptr’s utility, consider a data structure with objects A, B, and C in it, where A and C share ownership of B and therefore hold std::shared\_ptrs to it:
 
-\includegraphics[width=10cm]{img/Snipaste_2021-05-26_14-32-03.png}
+\includegraphics[width=10cm]{img/weak_ptr.png}
 Suppose it’d be useful to also have a pointer from B back to A. What kind of pointer should this be?
 \begin{enumerate}
   \item A raw pointer. With this approach, if A is destroyed, but C continues to point to B, B will contain a pointer to A that will dangle. B won’t be able to detect that, so B may inadvertently dereference the dangling pointer. That would yield undefined behavior.
@@ -284,9 +284,9 @@ Suppose it’d be useful to also have a pointer from B back to A. What kind of p
 \end{enumerate}
 Potential use cases for std::weak\_ptr include caching, observer lists, and the prevention of std::shared\_ptr cycles.
 \subsection{Runtime Garbage Collector}
-\includegraphics[width=16cm]{img/Snipaste_2021-05-31_17-46-55.png}\\
-\includegraphics[width=16cm]{img/Snipaste_2021-05-31_17-47-28.png}\\
-\includegraphics[width=16cm]{img/Snipaste_2021-05-31_17-47-56.png}
+\includegraphics[width=16cm]{img/reachability.png}\\
+\includegraphics[width=16cm]{img/stop_and_copy.png}\\
+\includegraphics[width=16cm]{img/refcount.png}
 
 \subsubsection{Case Study: Go GC}
 There are two main types of garbage collection algorithms, namely, tracing garbage collection algorithm and reference counting method. The three-color tagging method is one of the tracing garbage collection algorithms.
@@ -295,17 +295,16 @@ The core idea of tracing algorithm is to determine whether an object is reachabl
 
 The Go language garbage collector has been evolving since day one, except for a few versions without major updates, almost every minor release improves the performance of garbage collection, and along with the performance improvement is the complexity of the garbage collector code, \href{https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-garbage-collector/}{this} section will analyze the evolution of the garbage collector starting from the Go language v1.0 version.
 \subsection{Three color label algorithm}
- \includegraphics[width=10cm]{img/Snipaste_2021-05-31_17-55-13.png}
-
-
-\section{Hard-core Optimization}
-The optimization can be classified as 
-\begin{enumerate}
-  \item Local Optimizations apply inside a Basic Block
-  \item Global (Intra-procedural) Optimizations apply to a CFG across Basic Blocks
-  \item Inter-procedural Optimizations (过程间优化) apply across method boundaries
-\end{enumerate}
-\includegraphics[width=16cm]{img/Snipaste_2021-05-31_17-49-19.png}
-\subsection{Inter-procedural Optimizations}
-循环不变、归纳表达式、常量传播。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=5cm]{./img/tri_1.png}
+  \includegraphics[width=5cm]{./img/tri_2.png}
+  \includegraphics[width=5cm]{./img/tri_3.png}
+  \includegraphics[width=5cm]{./img/tri_4.png}
+  \includegraphics[width=5cm]{./img/tri_5.png}
+  \includegraphics[width=5cm]{./img/tri_6.png}
+  \includegraphics[width=5cm]{./img/tri_7.png}
+\end{figure}
+\section{Trait vs. Concept}
+\section{Codegen in Light IR}
 \end{document}

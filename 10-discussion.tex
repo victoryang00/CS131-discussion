@@ -84,7 +84,7 @@ Given a poset $(P, \sqsubseteq)$ and its subset $S$ that $S \subseteq P$, we say
 $S_{,}$ if $\forall x \in P, x \sqsubseteq u$. Similarly, $l \in P$ is an lower bound of $S$, if $\forall x \in P, l \sqsubseteq u$.
 
 $\text { 如图, }\{a, b, c\} \text { 是 } S \text { 的上界 (灰色) , }\{\} \text { 是 } S \text { 的下界: }$\\
-\includegraphics{img/Snipaste_2021-06-03_15-42-54.png}
+\includegraphics{img/upper_bound.png}
 
 \subsection{最小上界、最大下界}
 We define the least upper bound (lub or join) of $S$, written $\sqcup S$, if for every upper bound
@@ -188,7 +188,7 @@ $$
   \item Transfer function和join/meet fucntion可以视为F
 \end{enumerate}
 
-\includegraphics{img/Snipaste_2021-06-04_16-34-46.png}
+\includegraphics{img/lattice.png}
 
 下面只需要证明Transfer function和 join/meet function均为单调的即可
 
@@ -217,19 +217,19 @@ Bottom in the lattice.
 Must和May分析的示意图如下图所示，对于Must分析，每个代码块都是从$\top$开始的，因为在程序一开始，算法认为所有的待分析对象都是“合格”的（例如存活表达式分析中，算法认为每个表达式都是成活的）——这是一个不安全的状态，经过不断迭代，算法逐渐下降到最大不动点，虽然已经过了truth点（漏报），但是这已经是最好情况了（越往下走越safe但是结果也没意义了），对这些结果做优化能确保程序不出错（safe）。
 
 对于May分析，每个代码块从$\perp$开始，即在一开始，算法认为所有分析对象都是不合格的（例如定义可达性分析中，算法认为每一条定义都没有新的定义）——这是May类型的不安全状态，经过不断迭代，算法逐渐上升到最小不动点，同样也过了truth（误报），这也是分析的最好情况，算法依旧停留在safe区域。
-\includegraphics{img/Snipaste_2021-06-04_16-39-05.png}
+\includegraphics{img/must.png}
 
 \section{Distributivity（分配性） and MOP}
 \subsection{MOP（Meet-Over-All-Paths Solution）}
 设 $s_{x}$ 为矢 设 $F_{p}$ 是一个路径 $P$ 上的 transfer function, 那么 $\operatorname{MOP}\left[S_{i}\right]=\sqcup / \sqcap_{\mathrm{A} \text { path } P \text { from Entry to } S_{i}} F_{p}(O U T[E n t r y])$
 \\
-\includegraphics{img/Snipaste_2021-06-04_16-43-45.png}\\
+\includegraphics{img/moap.png}\\
 就是说，之前数据流分析的结果是流敏感的, 而 MOP 的结果是路径敏感的,
 例 如 下 图 所 示 的 数 据 流，，数 据 流 分 析 的 结 果 是
 $\mathrm{IN}\left[\mathrm{s}_{4}\right]=f_{s_{3}}\left(f_{s_{1}}(\mathrm{OUT}[\right.$ entry $]) \sqcup f_{S_{2}}($ OUT $[$ Entry $\left.])\right)$, 而 MOP 是
 $\operatorname{MOP}\left[\mathrm{s}_{4}\right]=f_{S_{3}}\left(f_{s_{1}}(\mathrm{OUT}[\right.$ entry $\left.])\right) \sqcup f_{S_{3}}\left(f_{S_{2}}(\mathrm{OUT}[\right.$ Entry $\left.])\right)\left(\right.$ 注意 $f_{s_{3}}$
 的位置)\\
-\includegraphics{img/Snipaste_2021-06-04_16-44-21.png}
+\includegraphics{img/mop.png}
 \subsection{Iterative Algorithm v.s. MOP}
 MOP比Iterative分析更精确，也就是说路径敏感比敏感更精确，下面为证明（这里只需证明两条路径的情况，其它数归即可）：
 
@@ -274,7 +274,7 @@ f(y, z)=\left\{\begin{array}{ll}
 $$
 \subsection{function不满足分配性}
 如下图所示，$F(X \sqcap Y)$ 中C的值为NAC，而$F(X) \sqcap F(Y)$中 C 的值为10，因此F不满足分配性。
-\includegraphics{img/Snipaste_2021-06-04_16-52-23.png}
+\includegraphics{img/distrib.png}
 \section{Worklist Algorithm}
 Iterative Algorithm的优化，Iterative 存在冗余的计算，而Worklist只计算有变化的node：
 \begin{lstlisting}
