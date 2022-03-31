@@ -236,7 +236,30 @@ $C$dispatchTable:
   .word $C.bar                             # Implementation for method: C.bar
   .word $C.foo1                            # Implementation for method: C.foo1
 \end{minted}
-
+Here's another python code:
+\begin{minted}[mathescape, linenos]{python}
+class A:
+  def say(self):
+    print("A")
+class B:
+  def say (self):
+    print("B")
+class C(A):
+  pass
+class D(C, B):
+  pass
+class M(D):
+  pass
+m=M()
+print(M.mro())
+m.say()
+\end{minted}
+MRO stands for Methods Relation Order, they defined a C3 serialization\cite{monotonicsuperclass} for the order of the methods, basically has 3 rules.
+\begin{enumerate}
+    \item Inheritance graph determines the structure of method resolution order.
+    \item User have to visit the super class only after the method of the local classes are visited.
+    \item Monotonicity
+\end{enumerate}
 \subsection{Exceptions and Code Generation}
 In this question we’ll look at how the \texttt{set\_jmp}/\texttt{long\_jmp} exception mechanism can be im-plemented. Consider a 32-bit computer architecture with 5 registers \texttt{(r0, ...,r4):r0-2} are used for function parameters,r3is used for the return address, and r4 is used to store the return value.  Implement \texttt{set\_jmp(jmp\_buf*)} and \texttt{long\_jmp(jmp\_buf*, int)} in assembly(AT\&T syntax).  Assume that the \texttt{jmp\_buf} is large enough, and that the second argument to \texttt{long\_jmp} is never 0. \cite{ljsj}
 \begin{solution}
