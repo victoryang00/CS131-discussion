@@ -15,7 +15,10 @@
 \usepackage{framed}
 \usepackage{multicol}
 \usepackage{listings,listings-rust}
+\usepackage{minted}
 \usepackage{hyperref}
+\usepackage{biblatex}
+\addbibresource{11-discussion.bib}
 \usepackage{tikz}
 \usetikzlibrary{automata,positioning}
 \theoremstyle{definition}
@@ -82,7 +85,7 @@ RAII can be summarized as follows:
 \\
   Classes with open()/close(), lock()/unlock(), or init()/copyFrom()/destroy() member functions are typical examples of non-RAII classes:
 
-  \begin{lstlisting}[language=c]
+  \begin{minted}[mathescape, linenos]{c++}
 #include <bits\stdc++.h>
 class ResourceGuard{
   private:
@@ -119,13 +122,13 @@ int main() {
   std::cout << "\nAfter try-catch block" << std::endl;
   std::cout << std::endl;
 }
-  \end{lstlisting}
+  \end{minted}
 \end{enumerate}
 \subsection{Modern C++ Resource Lifetime}
 \subsubsection{string\_view}
-The string "move" util to make the char like variable, whatever it come from, the fastest to deal with the memory reallocation.
+The string "move" util to make the char like variable, whatever it come from, the fastest to deal with the memory reallocation. In function arg passing, \textbf{callers responsibility to ensure the data outlive the function call\cite{stringview}}.
 
-\begin{lstlisting}[language=C]
+\begin{minted}[mathescape, linenos]{c++}
 #include <string>
 std::size_t length(const std::string &s){
   return s.size();
@@ -133,10 +136,10 @@ std::size_t length(const std::string &s){
 int main(){
   return length("hello world! long string");
 }
-\end{lstlisting}
+\end{minted}
 
 We get the resources allocated on heap, no exception. it requires the function call's full prologue and epilogue.
-\begin{lstlisting}[language={[Motorola68k]Assembler}]
+\begin{minted}[mathescape, linenos]{assembly}
   length(std::__cxx11::basic_string<char, ;allocator statically calculated
     std::char_traits<char>, std::allocator<char> > const&):
   mov     rax, QWORD PTR [rdi+8]
@@ -181,16 +184,16 @@ main:
 .LC0:
   .quad   8031924123371070824
   .quad   7957697951841938546
-\end{lstlisting}
+\end{minted}
 Instead, we can simply change $string$ to $string\_view$, which is very similar to $string$, but a view to it. And we still have the long string size at compile time.
-\begin{lstlisting}[language={[Motorola68k]Assembler}]
+\begin{minted}[mathescape, linenos]{assembly}
 length(std::basic_string_view<char, std::char_traits<char> > const&):
   mov     rax, QWORD PTR [rdi]
   ret
 main:
   mov     eax, 24
   ret
-\end{lstlisting}
+\end{minted}
 
 \subsubsection{PMR}
 PMR is for you to have a more sophisticated control of memory resources in C++, all about how, when and where to have your garbage may lie in, the design is something refer to channel in golang. Basically, it has at least 4 pros:
@@ -202,8 +205,8 @@ PMR is for you to have a more sophisticated control of memory resources in C++, 
 \end{enumerate} 
 In PMR, you can allocate a monotonic buffer resource or local thread stack resource. This solve the following 3 problems, just let the memory allocation unique to one thread. You can get a test of this \href{https://github.com/lefticus/cpp_weekly/blob/master/PMR/performance_tests.cpp}{code}
 \subsubsection{\href{https://www.oreilly.com/library/view/effective-modern-c/9781491908419/ch04.html}{smart pointer}}
-Use $std::unique\_ptr$ for exclusive-ownership resource management. 
-\begin{lstlisting}[language=C]
+Use \texttt{std::unique\_ptr} for exclusive-ownership resource management. \\
+\begin{minted}[mathescape, linenos]{c++}
   class Investment { … };
   class Stock:
     public Investment { … };
@@ -211,12 +214,12 @@ Use $std::unique\_ptr$ for exclusive-ownership resource management.
     public Investment { … };
   class RealEstate:
     public Investment { … };
-\end{lstlisting} 
+\end{minted} \\
 \includegraphics[width=10cm]{img/oop.png}
 
 A factory function for such a hierarchy typically allocates an object on the heap and returns a pointer to it, with the caller being responsible for deleting the object when it’s no longer needed. That’s a perfect match for std::unique\_ptr, because the caller acquires responsibility for the resource returned by the factory (i.e., exclusive ownership of it), and the std::unique\_ptr automatically deletes what it points to when the std::unique\_ptr is destroyed. A factory function for the Investment hierarchy could be declared like this:
 
-\begin{lstlisting}[language=C]
+\begin{minted}[mathescape, linenos]{c++}
   template<typename... Ts>              // return std::unique_ptr
   std::unique_ptr<Investment>           // to an object created
   makeInvestment(Ts&&... params);       // from the given args
@@ -242,7 +245,7 @@ makeInvestment(Ts&&... params) {
 
   return pInv;
 }
-\end{lstlisting}
+\end{minted}
 
 \subsubsection{Use std::shared\_ptr for shared-ownership resource management.}
 \begin{enumerate}
@@ -253,7 +256,7 @@ makeInvestment(Ts&&... params) {
   \item Increments and decrements of the reference count must be atomic, because there can be simultaneous readers and writers in different threads. For example, a std::shared\_ptr pointing to a resource in one thread could be executing its destructor (hence decrementing the reference count for the resource it points to), while, in a different thread, a std::shared\_ptr to the same object could be copied (and therefore incrementing the same reference count). Atomic operations are typically slower than non-atomic operations, so even though reference counts are usually only a word in size, you should assume that reading and writing them is comparatively costly.
 \end{enumerate}
 
-\begin{lstlisting}[language=C]
+\begin{minted}[mathescape, linenos]{c++}
 auto loggingDel = [](Widget *pw)        // custom deleter
   {                     // (as in Item 18)
     makeLogEntry(pw);
@@ -266,14 +269,14 @@ std::unique_ptr<                        // deleter type is
 
 std::shared_ptr<Widget>                 // deleter type is not
  spw(new Widget, loggingDel);          // part of ptr type
-\end{lstlisting}
+\end{minted}
 \includegraphics[width=10cm]{img/shared_ptr.png}
 
 \subsubsection{Use std::weak\_ptr for std::shared\_ptr-like pointers that can dangle.}
 
 As a final example of std::weak\_ptr’s utility, consider a data structure with objects A, B, and C in it, where A and C share ownership of B and therefore hold std::shared\_ptrs to it:
 
-\includegraphics[width=10cm]{img/weak_ptr.png}
+\includegraphics[width=10cm]{img/weak_ptr.png}\\
 Suppose it’d be useful to also have a pointer from B back to A. What kind of pointer should this be?
 \begin{enumerate}
   \item A raw pointer. With this approach, if A is destroyed, but C continues to point to B, B will contain a pointer to A that will dangle. B won’t be able to detect that, so B may inadvertently dereference the dangling pointer. That would yield undefined behavior.
@@ -284,10 +287,49 @@ Suppose it’d be useful to also have a pointer from B back to A. What kind of p
 \end{enumerate}
 Potential use cases for std::weak\_ptr include caching, observer lists, and the prevention of std::shared\_ptr cycles.
 \subsection{Runtime Garbage Collector}
-\includegraphics[width=16cm]{img/reachability.png}\\
-\includegraphics[width=16cm]{img/stop_and_copy.png}\\
-\includegraphics[width=16cm]{img/refcount.png}
+An object instance $x$ is \textbf{Reachable} on heap iff some variable (either in register or in memory) points to $x$, or another Reachable object $y$ contains a pointer to $x$. Unreachable objects are called \textbf{Garbage}, and is desired to get recycled by automatic memory management.
 
+The concept of Reachability is sound (safe) but not complete, since Unreachable objects are definitely useless, but not all Reachable objects will be used later.
+
+A example snapshot of the heap during execution can be:
+
+\begin{enumerate}
+    \item e.g.\includegraphics[width=5cm]{img/reachability.png}
+    \item Arraws indicates refernce pointings
+    \item \texttt{Roots} includes all references coming form outside the heap (in \texttt{ACC} or on stack)
+\end{enumerate}
+Various strategies of doing Garbage Collection (GC) exist. Three simple strategies are introduced below.
+\subsubsection{Mark \& Sweep}
+When running out of memory conduct the following two stages:
+\begin{enumerate}
+    \item Start from Roots, mark all Reachable objects
+\item Erase all Unreachable objects, while leaving Reachable ones unmoved
+\end{enumerate}
+Will fragment the memory, but no need to update pointers since unmoved.
+\subsubsection{Stop \& Copy}
+Memory is partitioned into two equal areas $S_{o l d}, S_{n e w}$, while $S_{\text {old }}$ is the one under use currently. When $S_{\text {old }}$ runs full, copy all Reachable objects to the beginning of $S_{n e w}$, and the rest of the memory is then considered free.
+\begin{enumerate}
+    \item e.g.\includegraphics[width=5cm]{img/stop_and_copy.png}
+    \item Notice the order:
+    \begin{enumerate}
+        \item First copy a Root $A$
+ \item Follow its out-going reference to $C$, сopy $C$
+  \item Update the pointer in $A$
+ \item Repeat, starting from $C$
+ \item If a referenced child is already copied, simply update the pointer
+    \end{enumerate}
+ 
+\end{enumerate}
+Avoids fragmentations, but is time- and memory-expensive, since pointers need to be updated, and only half of memory is available.
+\subsubsection{Ref Coundting}
+Reference Counting (RC) is a dynamic GC strategy. We denote $r c(x)$ as the Reference Count of object $x$, where:
+\begin{enumerate}
+    \item A new object $x$ has $r c(x)=1$
+\item After each assignment $x \leftarrow y, r c(x)-1, r c(y)+1$
+\item When a variable $a$ (pointing to $x$ ) goes out out Scope, $r c(x)-1$
+\item Free 0 -referenced objects at certain times
+\end{enumerate}
+Easy to implement, but very slow, and CANNOT handle circular references (where each $r c>0$, but the whole group is not Reachable).
 \subsubsection{Case Study: Go GC}
 There are two main types of garbage collection algorithms, namely, tracing garbage collection algorithm and reference counting method. The three-color tagging method is one of the tracing garbage collection algorithms.
 
@@ -306,5 +348,187 @@ The Go language garbage collector has been evolving since day one, except for a 
   \includegraphics[width=5cm]{./img/tri_7.png}
 \end{figure}
 \section{Trait vs. Concept}
+We may compare with the trait systems in rust or scala with the modern c++'s concepts, both of them are compile time check for the function and variable you defined. Since in many programer's mind, the Inheritance and combination is deprecated. See the following example:
+\begin{minted}[mathescape, linenos]{c++}
+class IStream {
+public:
+    virtual ~IStream() {}
+public:
+    virtual size_t read(std::uint8_t* buffer, size_t capacity) = 0;
+    virtual size_t write(const std::uint8_t* buffer, size_t size) = 0;
+};
+
+class Console : public IStream { ... };
+class FileStream : public IStream { ... };
+
+void some_algorithm(IStream& stream) {
+    std::uint8_t buffer[BUFFER_SIZE];
+    size_t read = stream.read(buffer, sizeof(buffer));
+    // do something
+}
+\end{minted}
+This is a typical example of dynamic (runtime) polymorphism. It is implemented by adding a field (vptr) at the beginning of each Console and FileStream object, which points to a table of virtual functions. When the corresponding read and write methods are used, this virtual function table pointer is found first, then the corresponding function pointer is found, and then the corresponding function call is made.
+
+Here the overhead of virtual functions is introduced, so for C++, which boasts zero-cost abstraction, this is costly, so another option is introduced.
+
+\subsection{Template and overload}
+
+\begin{minted}[mathescape, linenos]{c++}
+class Console { ... };
+class FileStream { ... };
+
+template < class TStream >
+void some_algorithm(TStream& stream) {
+    std::uint8_t buffer[BUFFER_SIZE];
+    size_t read = stream.read(buffer, sizeof(buffer));
+    // do something
+}
+\end{minted}
+Here you can see that since the template is directly connected to the corresponding function by overloading during the compilation stage when the template is expanded, the dispatch (dispatch) is done at the compilation stage, so it is called static dispatch, which eliminates the overhead of virtual functions.
+
+\subsubsection{Problems faced by polymorphism in C++}
+\begin{enumerate}
+\item When using static dispatch, due to the complete reliance on overloading, when writing the corresponding code, it is difficult to ensure that your class completely implements the requirements of the calling code, plus the use of deep templates, resulting in error messages that are very difficult to read; to solve this problem the C++ standard committee added the concept of concepts to the C++ 20 standard, which can explicitly propose constraints\cite{cppref}.
+\item When using dynamic dispatching, due to the presence of vptr, it destroys the memory structure of the object itself, which can be called a significant problem when your object also needs to interact with other libraries (especially those written in C).
+\item Since C++ is a very mature language, and concept is a concept that will be added in the next standard, the constraints for static and dynamic derivation are completely different syntaxes, and for the same constraint, if we need to use both static and dynamic derivation, we must write it twice (once for virtual base classes and once for concepts).
+\end{enumerate}
+
+\subsubsection{Inheritance is the deepest coupling}
+The hazards of coupling were described above, and inheritance is the deepest coupling. Because in the inheritance relationship, the parent class will expose its implementation to the child class, and the child class will no longer be interface-oriented, but rather programming-oriented implementation of the parent class.
+
+In the field of object-oriented, there is a classic book, of course, is the "Gang of Four" "Design Patterns". At the beginning of the book, it is clearly stated that "combination is better than inheritance", which is the same reason.
+
+\subsection{Solution in Rust Trait}
+\begin{minted}[mathescape, linenos]{rust}
+trait Stream {
+    fn read(&mut self, buffer: &mut [u8]) -> usize;
+    fn write(&mut self, buffer: &[u8]) -> usize;
+}
+
+struct Console;
+struct FileStream;
+
+impl Console { ... }
+impl FileStream { ... }
+
+impl Stream for Console {
+   fn read(&mut self, buffer: &mut [u8]) -> usize { ... }
+   ...
+}
+
+impl Stream for FileStream { ... }
+
+fn some_algorithm_dynamic(stream: &mut dyn Stream) {
+    let mut buffer = [0u8; BUFFER_SIZE];
+    stream.read(&mut buffer);
+    // do something
+}
+
+fn some_alogrithm_static<T : Stream>(stream: &mut T) {
+    let mut buffer = [0u8; BUFFER_SIZE];
+    stream.read(&mut buffer);
+    // do something
+}
+\end{minted}
+Comparing the C++ code, we can see that
+\begin{enumerate}
+    \item  For static dispatching, I can provide constraints directly in the form of T: Stream, requiring that the type parameter T of this generic function implements the trait Stream.
+   \item When it comes to dynamic dispatching, Rust chooses a different way to implement it. Let's focus on the argument type of the function some\_algorithm\_dynamic function. It is \texttt{\&mut dyn} Stream, indicating that it is a variable trait object of type Stream. unlike C++, in Rust the virtual function table pointer is not placed into the object's memory structure, but is passed in as a field of the trait object, a fat pointer object (think of the trait object as a structure with 2 fields, one pointing to the object and the other to the vtable).
+   \item The semantics of trait in Rust unifies the need for both static and dynamic dispatching; you only need to declare it once and implement it once to achieve static and dynamic dispatching according to your needs.
+\end{enumerate}
+
+\subsection{Use Concept to Rewrite Trait}
+Here's an example trait to use Oracle to access to impled struct with bounded type and trait.
+\begin{minted}[mathescape, linenos]{rust}
+/// Oracle for feasibility problems
+pub trait OracleFeas {
+    type ArrayType;
+    // f64 for 1D; ndarray::Array1<f64> for general
+    type CutChoices;
+    // f64 for single cut; (f64, Option<f64) for parallel cut
+    fn assess_feas(&mut self, x: &Self::ArrayType) -> Option<(Self::ArrayType, Self::CutChoices)>;
+}
+
+/// Oracle for optimization problems
+pub trait OracleOptim {
+    type ArrayType;
+    // f64 for 1D; ndarray::Array1<f64> for general
+    type CutChoices;
+    // f64 for single cut; (f64, Option<f64) for parallel cut
+    fn assess_optim(
+        &mut self,
+        x: &Self::ArrayType,
+        t: &mut f64,
+    ) -> ((Self::ArrayType, Self::CutChoices), bool);
+}
+
+/// Oracle for quantized optimization problems
+pub trait OracleQ {
+    type ArrayType;
+    // f64 for 1D; ndarray::Array1<f64> for general
+    type CutChoices;
+    // f64 for single cut; (f64, Option<f64) for parallel cut
+    fn assess_q(
+        &mut self,
+        x: &Self::ArrayType,
+        t: &mut f64,
+        retry: bool,
+    ) -> (
+        (Self::ArrayType, Self::CutChoices),
+        bool,
+        Self::ArrayType,
+        bool,
+    );
+}
+
+pub trait OracleBS {
+    fn assess_bs(&mut self, t: f64) -> bool;
+}
+\end{minted}
+We can rewrite it into concept:
+\begin{minted}[mathescape, linenos]{c++}
+template<typename T> using ArrayType = typename T::ArrayType;
+template<typename T> using CutChoices = typename T::CutChoices;
+template<typename T> using Cut = std::pair<ArrayType<T>, CutChoices<T>>;
+template<typename T> using RetQ = std::tuple<Cut<T>, bool, ArrayType<T>, bool>;
+
+
+template<class Oracle>
+concept OracleFeas = requires(Oracle omega, const ArrayType<Oracle> &x) {
+    typename Oracle::ArrayType;   // double for 1D; ndarray::Arr1 for general
+    typename Oracle::CutChoices;  // double for single cut; (double, Option<double) for parallel cut
+    { omega.assess_feas(x) } -> std::convertible_to<std::optional<Cut<Oracle>>>;
+};
+
+template<class Oracle>
+concept OracleOptim = requires(Oracle omega, const ArrayType<Oracle> &x, double &t) {
+    typename Oracle::ArrayType;   // double for 1D; ndarray::Arr1 for general
+    typename Oracle::CutChoices;  // double for single cut; (double, Option<double) for parallel cut
+    { omega.assess_optim(x, t) } -> std::convertible_to<std::pair<Cut<Oracle>, bool>>;
+};
+
+template<class Oracle>
+concept OracleQ = requires(Oracle omega, const ArrayType<Oracle> &x, double &t, bool retry) {
+    typename Oracle::ArrayType;   // double for 1D; ndarray::Arr1 for general
+    typename Oracle::CutChoices;  // double for single cut; (double, Option<double) for parallel cut
+    { omega.assess_q(x, t, retry) } -> std::convertible_to<RetQ<Oracle>>;
+};
+
+template<class Oracle>
+concept OracleBS = requires(Oracle omega, double &t) {
+    { omega.assess_bs(t) } -> std::convertible_to<bool>;
+};
+
+template<class Space, typename T>
+concept SearchSpace = requires(Space ss, const std::pair<ArrayType<Space>, T> &cut) {
+    typename Space::ArrayType;  // double for 1D; ndarray::Arr1 for general
+    { ss.xc() } -> std::convertible_to<ArrayType<Space>>;
+    { ss.update(cut) } -> std::convertible_to<std::pair<CutStatus, double>>;
+};
+\end{minted}
+
 \section{Codegen in Light IR}
+
+\printbibliography
+
 \end{document}
