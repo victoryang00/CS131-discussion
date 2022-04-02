@@ -19,6 +19,7 @@
 \usepackage{float}
 \usepackage{tikz}
 \usepackage{multicol,comment}
+\usepackage{hyperref}
 \usepackage{biblatex}
 \addbibresource{06-discussion.bib}
 \usepackage{tikz}
@@ -260,6 +261,7 @@ MRO stands for Methods Relation Order, they defined a C3 serialization\cite{mono
     \item User have to visit the super class only after the method of the local classes are visited.
     \item Monotonicity
 \end{enumerate}
+To static override any member function in the inheritance, you can you \href{https://stackoverflow.com/questions/24601722/how-can-i-use-functools-singledispatch-with-instance-methods}{single dispatch}.
 \subsection{Exceptions and Code Generation}
 In this question we’ll look at how the \texttt{set\_jmp}/\texttt{long\_jmp} exception mechanism can be im-plemented. Consider a 32-bit computer architecture with 5 registers \texttt{(r0, ...,r4):r0-2} are used for function parameters,r3is used for the return address, and r4 is used to store the return value.  Implement \texttt{set\_jmp(jmp\_buf*)} and \texttt{long\_jmp(jmp\_buf*, int)} in assembly(AT\&T syntax).  Assume that the \texttt{jmp\_buf} is large enough, and that the second argument to \texttt{long\_jmp} is never 0. \cite{ljsj}
 \begin{solution}
@@ -409,7 +411,7 @@ void Dominators::postOrderVisit(BasicBlock *bb, std::set<BasicBlock *> &visited)
 \end{minted}
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=5cm]{./img/figure2.png}
+  \includegraphics[width=10cm]{./img/figure2.png}
 \end{figure}
 \end{enumerate}
 \subsubsection{InsertPhi}
