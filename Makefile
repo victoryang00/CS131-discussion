@@ -4,9 +4,9 @@ ALL:
 		echo "Number: $$number" ; \
 		num1=`echo $${number}|awk '{printf("%02d\n",$$0)}'`; \
 		echo "num1: $$num1" ; \
-		xelatex -interaction=nonstopmode -shell-escape $${num1}-discussion.tex; \
+		xelatex -interaction=nonstopmode -shell-escape $${num1}-discussion.tex || true; \
 		bibtex  $${num1}-discussion; \
-		xelatex -interaction=nonstopmode -shell-escape $${num1}-discussion.tex; \
+		xelatex -interaction=nonstopmode -shell-escape $${num1}-discussion.tex|| true; \
 		((number = number + 1)) ; \
 	done
 	
