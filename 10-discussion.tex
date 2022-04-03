@@ -14,9 +14,12 @@
 \usepackage{mathtools}
 \usepackage{framed}
 \usepackage{multicol}
-\usepackage{listings}
+\usepackage{minted}
+\usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{tikz}
+\usepackage{biblatex}
+\addbibresource{10-discussion.bib}
 \usetikzlibrary{automata,positioning}
 \theoremstyle{definition}
 \newtheorem*{solution*}{\textbf{Solution:}}
@@ -55,7 +58,7 @@
 
 \begin{document}
 \maketitle
-\section{What's Data Flow Analysis}
+\section{Data Flow Analysis\cite{njuswanalysis}}
 Data-flow analysis is a technique for gathering information about the possible set of values calculated at various points in a computer program. A program's control-flow graph (CFG) is used to determine those parts of a program to which a particular value assigned to a variable might propagate. The information gathered is often used by compilers when optimizing a program. A canonical example of a data-flow analysis is reaching definitions.
 \subsection{Iterative Algorithm}
 \begin{enumerate}
@@ -109,7 +112,7 @@ Given a poset $(P, \sqsubseteq), \forall a, b \in P$, if $a \sqcup b$ and $a \sq
 \subsection{Semilattice}
 最小上界和最大下界只存在一个的偏序集称\textbf{半格}，只存在最小上界称为“join semilattice”，只存在最大下界称为“meet semilattice”。
 
-\subsection{Complete Lattice, top \& bottom (全格, $\top$ 和 $\perp$ ) $^{*}$}
+\subsection{Complete Lattice}
 Given a lattice $(P, \sqsubseteq)$, for arbitrary subset $S$ of $P$, if $\sqcup S$ and $\sqcap S$ exist, then $(P, \sqsubseteq)$ is
 called a complete lattice.
 
@@ -197,9 +200,8 @@ $$
 调的;
 \item Join/meet function是单调的, 证明如下
 \end{enumerate}
-
 要证Join/meet function，就是要证
-$\forall x, y, z \in L, x \sqsubseteq y \Rightarrow x \sqcup z \sqsubseteqᅳ y \sqcup z$
+$$\forall x, y, z \in L, x \sqsubseteq y \rightarrow x \sqcup z \sqsubseteq - y \sqcup z$$
 由 $\sqcup$ 定义可得, $y \sqsubseteq y \sqcup z$,
 由于巨传递性, $x \sqsubseteq y$, 因此 $x \sqsubseteq y \sqcup z$, 因此 $y \sqcup z$ 是 $x$ 的上界,
 注意到 $y \sqcup z$ 也是 $z$ 的上界, 而 $x \sqcup z$ 是 $x$ 和 $z$ 的最小上界,
@@ -296,7 +298,125 @@ for(each basic block B\entry)
   \item 流敏感：程序语句随意调换位置，分析结果不变为流非敏感，否则为流敏感；
   \item 路径敏感：考虑程序中路径的可行性；
 \end{enumerate}
+\section{Space of dataflow ananlys \cite{cs153lec18}}
+$$\begin{array}{|c|c|c|}
+  \hline & \text { May } & \text { Must } \\
+  \hline \text { Forward } & \begin{array}{c}
+  \text { Reaching } \\
+  \text { definitions }
+  \end{array} & \begin{array}{c}
+  \text { Available } \\
+  \text { expressions }
+  \end{array} \\
+  \hline \text { Backward } & \text { Live variables } & \begin{array}{c}
+  \text { Very busy } \\
+  \text { expressions }
+  \end{array} \\
+  \hline
+  \end{array}$$
+ \subsection{Available Expressions}
+ \begin{enumerate}
+     \item An expression e is available at program point $p$ if on all paths from the entry to $p$, expression e is computed at least once, and there are no intervening  assignment to $\mathrm{x}$ or to the free variables of $\mathrm{e}$
+     \item If e is available at $p$, we do not need to re-compute e
+     
+\begin{enumerate}
+    \item (i.e., for common sub-expression elimination)
+\end{enumerate}
+\item How do we compute the available expressions at each program point?
+ \end{enumerate}
+ \begin{figure}[htbp]
+  \centering
+  \includegraphics[width=10cm]{./img/avail.png}
+\end{figure}
+Formally:
+\begin{enumerate}
+    \item Suppose $D$ is a set of expressions that are available at program point $p$
+\item Suppose $p$ is immediately before " $\mathrm{x}:=\mathrm{e}_{1} ; \quad \mathrm{B}^{\prime \prime}$
+\item Then the statement " $\mathrm{x}:=\mathrm{e}_{1}$ "
+\begin{enumerate}
+    \item generates the available expression $\mathbf{e}_{1}$
+    \item kills any available expression $\mathbf{e}_{2}$ in $D$ such that $\mathbf{x}$ is in variables $\left(\mathbf{e}_{2}\right)$
+    
+\end{enumerate}
+\item So the available expressions for B are: $\left(D \cup\left\{\mathbf{e}_{1}\right\}\right)-\left\{\mathbf{e}_{2} \mid \mathbf{x} \in \operatorname{variables}\left(\mathbf{e}_{2}\right)\right\}$
+\end{enumerate}
 
-\section{总结}
-本节来自南京大学Bilibili程序分析课程，主要介绍格，接着用格抽象描述数据流分析，解释为什么迭代算法能够到达最大/最小不动点，接着比较了流敏感和路径敏感的准确性，最后介绍worklist算法，以提升迭代算法的效率。
+$$\begin{array}{|c|c|c|}
+\hline \text { Stmt } & \text { Gen } & \text { Kill } \\
+\hline \mathbf{x}:=\mathbf{v} & \{\mathrm{v}\} & \{\mathrm{e} \mid \mathrm{x} \text { in } \mathrm{e}\} \\
+\hline \mathbf{x}:=\mathbf{v}_{1} \text { op } \mathbf{v}_{2} & \left\{\mathbf{v}_{1} \text { op } \mathrm{v}_{2}\right\} & \{\mathrm{e} \mid \mathrm{x} \text { in } \mathrm{e}\} \\
+\hline \mathbf{x}:=*(\mathrm{v}+i) & \{\} & \{\mathrm{e} \mid \mathrm{x} \text { in } \mathrm{e}\} \\
+\hline *(\mathrm{v}+i):=\mathrm{x} & \{\} & \{\} \\
+\hline \text { jump } \mathrm{L} & \{\} & \{\} \\
+\hline \text { return } \mathrm{v} & \{\} & \{\} \\
+\hline \text { if v1 op v2 goto I1 else goto L2 } & \{\} & \{\} \\
+\hline \mathbf{x}:=\mathbf{v}\left(\mathbf{v}_{1}, \ldots \mathbf{v}_{\mathrm{n}}\right) & \{\} & \{\mathrm{e} \mid \text { in } \mathrm{e}\} \\
+\hline
+\end{array}$$
+
+$$\text { Transfer function for stmt } S: \lambda D .\left(D \cup G e n_{S}\right)-\text { Kill }_{S}$$
+\subsubsection{Aliasing}
+You can use Aliasing to save register!
+\begin{enumerate}
+    \item We can tell whether variables names are equal.
+\item We cannot (in general) tell whether two variables will have the same value.
+\item If we track * $\mathrm{x}$ as an available expression, and then see $* y:=e^{\prime}$, don't know whether to kill * $x$
+\item Don't know whether x's value will be the same as $y^{\prime}$ s value
+\end{enumerate}
+\begin{minted}[mathescape,linenos]{c}
+void accumulate_restrict(int* restrict source, int len, int* restrict target) {
+    for (int i = 0; i < len; i++) {
+        *target += source[i];
+    }
+}
+\end{minted}
+\subsection{Reaching Definitions}
+\begin{enumerate}
+    \item A definition $\mathrm{x}:=\mathrm{e}$ reaches a program point $p$ if there is some path from the assignment to $p$ that contains no other assignment to $\mathrm{x}$
+\item Reaching definitions useful in several optimizations, including constant propagation
+\item Can also define reaching definitions analysis using gen and kill sets; combine dataflow facts at merge points by union
+\end{enumerate}
+Define $\operatorname{defs}(\mathbf{x})$ to be the set of all definitions of variable $x$
+$$\begin{array}{|c|c|c|}
+\hline \text { Stmt } & \text { Gen } & \text { Kill } \\
+\hline \mathrm{d}: \mathbf{x}:=\mathbf{v} & \{\mathrm{d}\} & \operatorname{defs}(\mathbf{x})-\{\mathrm{d}\} \\
+\hline \mathrm{d}: \mathbf{x}:=\mathbf{v}_{1} \text { op } \mathbf{v}_{2} & \{\mathrm{~d}\} & \operatorname{defs}(\mathbf{x})-\{\mathrm{d}\} \\
+\hline \text { everything else } &  &  \\
+\hline
+\end{array}$$
+\begin{enumerate}
+    \item $$
+D_{\text {in }}[\mathrm{L}]=\cup\left\{D_{\text {out }}\left[\mathrm{L}^{\prime}\right] \mid \mathrm{L}^{\prime} \text { in pred }[\mathrm{L}]\right\}
+$$
+\item Transfer function for stmt $S: \lambda D$. (D $\cup \mathrm{Gen} s)-\mathrm{Kill}_{S}$
+\end{enumerate}
+\subsection{Liveness}
+\begin{enumerate}
+    \item  Variable $\mathbf{x}$ is live at program point $p$ is there is a path from $p$ to a use of variable $\mathrm{x}$
+\item Liveness useful in dead code elimination and register allocation
+\item Can also define using gen-kill sets
+\item However, we use a backward dataflow analysis i.e., instead of flowing facts forwards over statement (computing $D_{\text {out }}$ from $D_{\text {in }}$ ) we flow facts backwards over statements (compute $D_{\text {in }}$ from $D_{\text {out }}$ )
+\end{enumerate}
+$$\begin{array}{|c|c|c|}
+\hline \text { Stmt } & \text { Gen } & \text { Kill } \\
+\hline \mathbf{x}:=\mathbf{v} & \{\mathbf{v} \mid \text { if } \mathrm{v} \text { is variable }\} & \{\mathbf{x}\} \\
+\hline \mathbf{x}:=\mathbf{v}_{1} \text { op } \mathbf{v}_{2} & \left\{\mathrm{v}_{i} \mid i \in 1,2, \mathrm{v}_{i} \text { is var }\right\} & \{\mathbf{x}\} \\
+\hline \mathbf{x}:=*(\mathrm{v}+i) & \{\mathbf{v} \mid \text { if } \mathrm{v} \text { is variable }\} & \{\mathbf{x}\} \\
+\hline *(\mathrm{v}+i):=\mathbf{x} & \{\mathrm{x}\} \cup\{\mathrm{v} \mid \text { if } \mathrm{v} \text { is variable }\} & \{\} \\
+\hline \text { jump L } & \{\} & \{\} \\
+\hline \text { return } \mathrm{v} & \{\mathrm{v} \mid \text { if } \mathrm{v} \text { is variable }\} & \{\} \\
+\hline \text { if } \mathrm{v}_{1} \text { op v2 goto L1 else goto L2 } & \left\{\mathbf{v}_{i} \mid i \in 1,2, \mathbf{v}_{i} \text { is var }\right\} & \{\} \\
+\hline \mathbf{x}:=\mathbf{v}_{0}\left(\mathrm{v}_{1}, \ldots \mathrm{v}_{\mathrm{n}}\right) & \left\{\mathbf{v}_{i} \mid i \in 0 . . n, \mathrm{v}_{i} \text { is var }\right\} & \{\mathrm{x}\} \\
+\hline
+\end{array}$$
+\begin{enumerate}
+    \item i.e., any use of a variable generates liveness, any definition kills liveness 
+    \item $D_{\text {out }}[\mathrm{L}]=\cup\left\{D_{\text {in }}\left[\mathrm{L}^{\prime}\right] \mid \mathrm{L}^{\prime}\right.$ in $\left.\operatorname{succ}[\mathrm{L}]\right\}$
+    \item $$\text { Transfer function for stmt } S: \lambda D .\left(D \cup \text { Gen }_{S}\right)-\text { Kill }_{S}$$
+\end{enumerate}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=10cm]{./img/liveness.png}
+\end{figure}
+\printbibliography
 \end{document}

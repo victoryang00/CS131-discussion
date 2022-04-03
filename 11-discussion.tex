@@ -528,6 +528,126 @@ concept SearchSpace = requires(Space ss, const std::pair<ArrayType<Space>, T> &c
 \end{minted}
 
 \section{Codegen in Light IR}
+\subsection{RISCV Spec}
+定义详见 [RISCV Spec](https://riscv.org/technical/specifications/)， [RVV](https://github.com/riscv/riscv-v-spec).
+
+\subsection{后端介绍}
+
+\subsection{对寄存器和地址的抽象}
+值的地址。
+\begin{minted}[mathescape,linenos]{c++}
+class Value {
+public:
+    virtual constexpr bool is_reg() const = 0;
+    virtual constexpr bool is_constant() const = 0;
+    virtual constexpr bool has_shift() const = 0;
+    virtual constexpr string_view get_name() const = 0;
+};
+\end{minted}
+对寄存器的抽象
+\begin{minted}[mathescape,linenos]{c++}
+class Reg : public Value {
+    int id;
+public:
+    explicit Reg(int id) : id(id) {
+        if (id < 0 || id > max_reg_id) {
+            LOG(ERROR) << "Invalid Reg ID!";
+            abort();
+        }
+    }
+    bool is_reg() const override { return true; }
+    bool is_constant() const override { return false; }
+    bool has_shift() const override { return false; }
+    int getID() const { return this->id; }
+    string_view get_name() const override { return reg_name[id]; }
+    constexpr bool operator<(const Reg &rhs) const { return this->id < rhs.id; }
+    constexpr bool operator==(const Reg &rhs) const { return this->id == rhs.id; }
+    constexpr bool operator!=(const Reg &rhs) const { return this->id != rhs.id; }
+};
+class RegShift : public Value {
+public:
+    enum ShiftType { lsl, lsr, asl, asr };
+private:
+    int id;
+    int shift;
+    ShiftType _t;
+}
+\end{minted}
+callee \& caller saved \& temporary \&& general register
+\begin{minted}[mathescape,linenos]{c++}
+const vector<InstGen::Reg> caller_save_regs =
+  {InstGen::Reg(1),  InstGen::Reg(5),  
+  InstGen::Reg(6),  InstGen::Reg(7),
+  InstGen::Reg(10), InstGen::Reg(11), 
+  InstGen::Reg(12), InstGen::Reg(13),
+  InstGen::Reg(14), InstGen::Reg(15), 
+  InstGen::Reg(16), InstGen::Reg(17),
+  InstGen::Reg(28), InstGen::Reg(29),
+  InstGen::Reg(30), InstGen::Reg(31)};
+const vector<InstGen::Reg> callee_save_regs = 
+  {InstGen::Reg(2),  InstGen::Reg(8),
+  InstGen::Reg(9),  InstGen::Reg(18),
+  InstGen::Reg(19), InstGen::Reg(20), 
+  InstGen::Reg(21), InstGen::Reg(22),
+  InstGen::Reg(23), InstGen::Reg(24), 
+  InstGen::Reg(25), InstGen::Reg(26),
+  InstGen::Reg(27)};
+const vector<InstGen::Reg> allocate_regs = 
+  {InstGen::Reg(10), InstGen::Reg(11), 
+  InstGen::Reg(12), InstGen::Reg(13),
+  InstGen::Reg(14), InstGen::Reg(15), 
+  InstGen::Reg(16), InstGen::Reg(17)};
+const vector<InstGen::Reg> temp_regs = 
+  {InstGen::Reg(5),  InstGen::Reg(6),  
+  InstGen::Reg(7), InstGen::Reg(28),
+  InstGen::Reg(29), InstGen::Reg(30), 
+  InstGen::Reg(31)};
+\end{minted}
+地址
+\begin{minted}[mathescape,linenos]{c++}
+class Addr {
+    Reg reg;
+    int offset;
+    string str;
+public:
+    explicit Addr(Reg reg, int offset) : reg(std::move(reg)), offset(offset) {}
+    Addr(string str) : str(std::move(str)), reg(Reg(0)), offset(0) {}
+    Addr(string_view str) : str(str.begin(), str.end()), reg(Reg(0)), offset(0) {}
+    Addr(const char *str) : str(str), reg(Reg(0)), offset(0) {}
+    Reg getReg() const { return this->reg; }
+    int getOffset() const { return this->offset; }
+    string_view get_name() const;
+};
+\end{minted}
+一个名字的 Label
+\begin{minted}[mathescape,linenos]{c++}
+class Label {
+    string label;
+    int offset;
+public:
+    explicit Label(string label, int offset) : label(move(label)), offset(offset) {}
+    explicit Label(string label) : label(move(label)), offset(0) {}
+    string_view get_name() const { return fmt::format("{}+{}", label, offset); }
+};
+\end{minted}
+Heap Size/ L1 Size/ L2 Size
+\subsection{寄存器分配}
+
+本项目使用图着色法
+
+Interface Graph图中的每个节点代表某个变量的活跃期或生存期（Live range）。活跃期定义是从变量第一次被定义（赋值）开始，到它下一次被赋值前的最后一次被使用为止。两个节点之间的边表示这两个变量活跃期因为生命期（lifetime）重叠导致互相冲突或干涉。一般说来，如果两个变量在函数的某一点是同时活跃（live）的，它们就相互冲突，不能占有同一个寄存器。
+
+https://www.zhihu.com/question/56005792/answer/147558407
+
+图着色算法：https://web.eecs.umich.edu/~mahlke/courses/583f12/reading/chaitin82.pdf
+
+线性扫描算法：https://www2.seas.gwu.edu/~hchoi/teaching/cs160d/linearscan.pdf
+
+偏向CISC指令集的Second chance binpacking算法
+
+SSA形式带来的优点就是能有效的降低单个interval的长度，这在CISC指令集计算机中会非常有效。同时，充分利用SSA形式的IR的稀疏特性，避免迭代式的liveness analysis。有效的降低时间复杂度。
+
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.162.2590&rep=rep1&type=pdf
 
 \printbibliography
 
