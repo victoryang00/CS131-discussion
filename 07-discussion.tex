@@ -306,16 +306,16 @@ $$\begin{tabular}{|c|c|c|}
 \hline
 \end{tabular}$$
 \item Assuming thate1now evaluates to the address of a 2D array de-scriptor, the IL code becomes:
-$t=\operatorname{cgen}(\operatorname{se1}[\mathrm{e} 2, \mathrm{e} 3]):$
-$\mathrm{t} 1=\operatorname{cgen}(\mathrm{e} 1) ; \quad \#$ Yields a pointer to a descriptor.
-$t 2=\operatorname{cgen}(\mathrm{e} 2 ;$
-t3 $=\operatorname{cgen}(\mathrm{e} 3)$
-$\Rightarrow$ t4 := *t1; # The VO
-$\Rightarrow$ t5 :=*(t1+4) # Stride #1
-$\Rightarrow$ t6 :=*(t1+8) # Stride #2
-$\Rightarrow$ t7 $:=$ t5 $*$ t2
-$\Rightarrow$ t8 := t6 $*$ t3
-$\Rightarrow \mathrm{t} 9:=\mathrm{t} 4+\mathrm{t} 7$
+$t=\operatorname{cgen}(\operatorname{se1}[\mathrm{e} 2, \mathrm{e} 3]):$\\
+$\mathrm{t} 1=\operatorname{cgen}(\mathrm{e} 1) ; \quad \#$ Yields a pointer to a descriptor.\\
+$t 2=\operatorname{cgen}(\mathrm{e} 2 ;$\\
+t3 $=\operatorname{cgen}(\mathrm{e} 3)$\\
+$\Rightarrow$ t4 := *t1; # The VO\\
+$\Rightarrow$ t5 :=*(t1+4) # Stride #1\\
+$\Rightarrow$ t6 :=*(t1+8) # Stride #2\\
+$\Rightarrow$ t7 $:=$ t5 $*$ t2\\
+$\Rightarrow$ t8 := t6 $*$ t3\\
+$\Rightarrow \mathrm{t} 9:=\mathrm{t} 4+\mathrm{t} 7$\\
 $\Rightarrow t 10:=t 9+t 8$
 
 \item By judicious choice of descriptor values, can make the same formula work for different kinds of array.
